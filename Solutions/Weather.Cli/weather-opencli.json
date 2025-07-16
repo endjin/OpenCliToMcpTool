@@ -1,0 +1,266 @@
+{
+  "opencli": "0.1",
+  "info": {
+    "title": "Weather",
+    "version": "1.0.0",
+    "description": "Weather information and forecast CLI tool"
+  },
+  "commands": {
+    "current": {
+      "description": "Get current weather for a city",
+      "arguments": [
+        {
+          "name": "city",
+          "description": "City name",
+          "required": true,
+          "ordinal": 0
+        }
+      ],
+      "options": [
+        {
+          "name": "unit",
+          "aliases": ["u"],
+          "description": "Temperature unit",
+          "arguments": [
+            {
+              "name": "type",
+              "required": true,
+              "acceptedValues": ["celsius", "fahrenheit", "kelvin"]
+            }
+          ]
+        },
+        {
+          "name": "detailed",
+          "aliases": ["d"],
+          "description": "Show detailed information"
+        },
+        {
+          "name": "format",
+          "aliases": ["f"],
+          "description": "Output format",
+          "arguments": [
+            {
+              "name": "type",
+              "required": true,
+              "acceptedValues": ["text", "json"]
+            }
+          ]
+        }
+      ],
+      "examples": [
+        {
+          "command": "weather current London",
+          "description": "Get current weather in London"
+        },
+        {
+          "command": "weather current Tokyo --unit fahrenheit",
+          "description": "Get temperature in Fahrenheit"
+        },
+        {
+          "command": "weather current Paris --detailed",
+          "description": "Get detailed weather information"
+        }
+      ]
+    },
+    "forecast": {
+      "description": "Get weather forecast",
+      "arguments": [
+        {
+          "name": "city",
+          "description": "City name",
+          "required": true,
+          "ordinal": 0
+        }
+      ],
+      "options": [
+        {
+          "name": "days",
+          "aliases": ["d"],
+          "description": "Number of days (1-14)",
+          "arguments": [
+            {
+              "name": "count",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "unit",
+          "aliases": ["u"],
+          "description": "Temperature unit",
+          "arguments": [
+            {
+              "name": "type",
+              "required": true,
+              "acceptedValues": ["celsius", "fahrenheit", "kelvin"]
+            }
+          ]
+        },
+        {
+          "name": "format",
+          "aliases": ["f"],
+          "description": "Output format",
+          "arguments": [
+            {
+              "name": "type",
+              "required": true,
+              "acceptedValues": ["table", "json", "chart"]
+            }
+          ]
+        }
+      ],
+      "examples": [
+        {
+          "command": "weather forecast Paris",
+          "description": "Get 5-day forecast for Paris"
+        },
+        {
+          "command": "weather forecast Berlin --days 7",
+          "description": "Get 7-day forecast"
+        },
+        {
+          "command": "weather forecast Madrid --format chart",
+          "description": "Display forecast as a chart"
+        }
+      ],
+      "exitCodes": [
+        {
+          "code": 0,
+          "description": "Success"
+        },
+        {
+          "code": 1,
+          "description": "Invalid parameters (e.g., days out of range)"
+        }
+      ]
+    },
+    "compare": {
+      "description": "Compare weather between cities",
+      "arguments": [
+        {
+          "name": "cities",
+          "description": "Cities to compare (2-5)",
+          "required": true,
+          "ordinal": 0,
+          "arity": "one-or-more"
+        }
+      ],
+      "options": [
+        {
+          "name": "unit",
+          "aliases": ["u"],
+          "description": "Temperature unit",
+          "arguments": [
+            {
+              "name": "type",
+              "required": true,
+              "acceptedValues": ["celsius", "fahrenheit", "kelvin"]
+            }
+          ]
+        }
+      ],
+      "examples": [
+        {
+          "command": "weather compare London Paris",
+          "description": "Compare weather between two cities"
+        },
+        {
+          "command": "weather compare Tokyo \"New York\" Berlin",
+          "description": "Compare weather between three cities"
+        }
+      ],
+      "exitCodes": [
+        {
+          "code": 0,
+          "description": "Success"
+        },
+        {
+          "code": 1,
+          "description": "Invalid number of cities"
+        }
+      ]
+    },
+    "location": {
+      "description": "Manage saved locations",
+      "commands": {
+        "add": {
+          "description": "Add a favorite location",
+          "arguments": [
+            {
+              "name": "city",
+              "description": "City name",
+              "required": true,
+              "ordinal": 0
+            }
+          ],
+          "options": [
+            {
+              "name": "nickname",
+              "aliases": ["n"],
+              "description": "Nickname for the location",
+              "arguments": [
+                {
+                  "name": "name",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "examples": [
+            {
+              "command": "weather location add London",
+              "description": "Add London to saved locations"
+            },
+            {
+              "command": "weather location add London --nickname home",
+              "description": "Add London with a nickname"
+            }
+          ]
+        },
+        "list": {
+          "description": "List saved locations",
+          "examples": [
+            {
+              "command": "weather location list",
+              "description": "Show all saved locations"
+            }
+          ]
+        },
+        "remove": {
+          "description": "Remove a saved location",
+          "arguments": [
+            {
+              "name": "city",
+              "description": "City name to remove",
+              "required": true,
+              "ordinal": 0
+            }
+          ],
+          "options": [
+            {
+              "name": "force",
+              "aliases": ["f"],
+              "description": "Skip confirmation"
+            }
+          ],
+          "examples": [
+            {
+              "command": "weather location remove London",
+              "description": "Remove London from saved locations"
+            }
+          ],
+          "exitCodes": [
+            {
+              "code": 0,
+              "description": "Location removed successfully"
+            },
+            {
+              "code": 1,
+              "description": "Location not found"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

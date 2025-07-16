@@ -1,0 +1,537 @@
+{
+  "opencli": "0.1",
+  "info": {
+    "title": "Task Manager",
+    "version": "1.0.0",
+    "description": "A comprehensive task management CLI tool"
+  },
+  "options": [
+    {
+      "name": "verbose",
+      "aliases": ["v"],
+      "description": "Enable verbose output"
+    },
+    {
+      "name": "config",
+      "description": "Path to configuration file",
+      "arguments": [
+        {
+          "name": "path",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "commands": {
+    "list": {
+      "description": "List all tasks",
+      "aliases": ["ls"],
+      "options": [
+        {
+          "name": "status",
+          "aliases": ["s"],
+          "description": "Filter by task status",
+          "arguments": [
+            {
+              "name": "value",
+              "required": true,
+              "acceptedValues": ["pending", "in-progress", "completed", "cancelled"]
+            }
+          ]
+        },
+        {
+          "name": "priority",
+          "aliases": ["p"],
+          "description": "Filter by priority",
+          "arguments": [
+            {
+              "name": "value", 
+              "required": true,
+              "acceptedValues": ["low", "medium", "high", "critical"]
+            }
+          ]
+        },
+        {
+          "name": "assignee",
+          "aliases": ["a"],
+          "description": "Filter by assignee",
+          "arguments": [
+            {
+              "name": "name",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "project",
+          "description": "Filter by project",
+          "arguments": [
+            {
+              "name": "name",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "sort",
+          "description": "Sort tasks by field",
+          "arguments": [
+            {
+              "name": "field",
+              "required": true,
+              "acceptedValues": ["id", "title", "priority", "status", "due"]
+            }
+          ]
+        },
+        {
+          "name": "show-completed",
+          "description": "Show completed tasks"
+        }
+      ],
+      "examples": [
+        {
+          "command": "taskmanager list",
+          "description": "List all pending tasks"
+        },
+        {
+          "command": "taskmanager list --status pending",
+          "description": "List only pending tasks"
+        },
+        {
+          "command": "taskmanager list --priority high --status in-progress",
+          "description": "List high priority tasks that are in progress"
+        }
+      ]
+    },
+    "task": {
+      "description": "Manage individual tasks",
+      "commands": {
+        "add": {
+          "description": "Add a new task",
+          "arguments": [
+            {
+              "name": "title",
+              "description": "Task title",
+              "required": true,
+              "ordinal": 0
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "aliases": ["d"],
+              "description": "Task description",
+              "arguments": [
+                {
+                  "name": "text",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "name": "priority",
+              "aliases": ["p"],
+              "description": "Task priority",
+              "arguments": [
+                {
+                  "name": "level",
+                  "required": true,
+                  "acceptedValues": ["low", "medium", "high", "critical"]
+                }
+              ]
+            },
+            {
+              "name": "due",
+              "description": "Due date (YYYY-MM-DD or relative)",
+              "arguments": [
+                {
+                  "name": "date",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "name": "assignee",
+              "aliases": ["a"],
+              "description": "Assignee name",
+              "arguments": [
+                {
+                  "name": "name",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "name": "project",
+              "description": "Project name",
+              "arguments": [
+                {
+                  "name": "name",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "name": "tags",
+              "aliases": ["t"],
+              "description": "Comma-separated tags",
+              "arguments": [
+                {
+                  "name": "tags",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "examples": [
+            {
+              "command": "taskmanager task add \"Complete project documentation\"",
+              "description": "Add a simple task"
+            },
+            {
+              "command": "taskmanager task add \"Review pull request\" --priority high --due tomorrow",
+              "description": "Add a high priority task due tomorrow"
+            }
+          ]
+        },
+        "update": {
+          "description": "Update an existing task",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Task ID",
+              "required": true,
+              "ordinal": 0
+            }
+          ],
+          "options": [
+            {
+              "name": "title",
+              "description": "New title",
+              "arguments": [
+                {
+                  "name": "text",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "name": "description",
+              "aliases": ["d"],
+              "description": "New description",
+              "arguments": [
+                {
+                  "name": "text",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "name": "status",
+              "aliases": ["s"],
+              "description": "New status",
+              "arguments": [
+                {
+                  "name": "value",
+                  "required": true,
+                  "acceptedValues": ["pending", "in-progress", "completed", "cancelled"]
+                }
+              ]
+            },
+            {
+              "name": "priority",
+              "aliases": ["p"],
+              "description": "New priority",
+              "arguments": [
+                {
+                  "name": "level",
+                  "required": true,
+                  "acceptedValues": ["low", "medium", "high", "critical"]
+                }
+              ]
+            },
+            {
+              "name": "assignee",
+              "aliases": ["a"],
+              "description": "New assignee",
+              "arguments": [
+                {
+                  "name": "name",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "name": "clear-assignee",
+              "description": "Clear assignee"
+            }
+          ],
+          "examples": [
+            {
+              "command": "taskmanager task update 123 --status completed",
+              "description": "Mark task as completed"
+            },
+            {
+              "command": "taskmanager task update 123 --priority low --assignee john",
+              "description": "Update priority and assignee"
+            }
+          ]
+        },
+        "delete": {
+          "description": "Delete a task",
+          "aliases": ["rm"],
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Task ID",
+              "required": true,
+              "ordinal": 0
+            }
+          ],
+          "options": [
+            {
+              "name": "force",
+              "aliases": ["f"],
+              "description": "Skip confirmation"
+            }
+          ],
+          "examples": [
+            {
+              "command": "taskmanager task delete 123",
+              "description": "Delete task with confirmation"
+            },
+            {
+              "command": "taskmanager task delete 123 --force",
+              "description": "Delete task without confirmation"
+            }
+          ]
+        },
+        "show": {
+          "description": "Show details of a specific task",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Task ID",
+              "required": true,
+              "ordinal": 0
+            }
+          ],
+          "options": [
+            {
+              "name": "format",
+              "aliases": ["f"],
+              "description": "Output format",
+              "arguments": [
+                {
+                  "name": "type",
+                  "required": true,
+                  "acceptedValues": ["table", "json"]
+                }
+              ]
+            }
+          ],
+          "examples": [
+            {
+              "command": "taskmanager task show 123",
+              "description": "Show task details in table format"
+            },
+            {
+              "command": "taskmanager task show 123 --format json",
+              "description": "Show task details in JSON format"
+            }
+          ]
+        }
+      }
+    },
+    "project": {
+      "description": "Manage projects",
+      "commands": {
+        "list": {
+          "description": "List all projects",
+          "options": [
+            {
+              "name": "active",
+              "description": "Show only active projects"
+            }
+          ],
+          "examples": [
+            {
+              "command": "taskmanager project list",
+              "description": "List all projects"
+            },
+            {
+              "command": "taskmanager project list --active",
+              "description": "List only active projects"
+            }
+          ]
+        },
+        "create": {
+          "description": "Create a new project",
+          "arguments": [
+            {
+              "name": "name",
+              "description": "Project name",
+              "required": true,
+              "ordinal": 0
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "aliases": ["d"],
+              "description": "Project description",
+              "arguments": [
+                {
+                  "name": "text",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "name": "team",
+              "aliases": ["t"],
+              "description": "Team name",
+              "arguments": [
+                {
+                  "name": "name",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "examples": [
+            {
+              "command": "taskmanager project create \"Website Redesign\"",
+              "description": "Create a simple project"
+            },
+            {
+              "command": "taskmanager project create \"API Development\" --team backend",
+              "description": "Create project with team assignment"
+            }
+          ]
+        },
+        "archive": {
+          "description": "Archive a project",
+          "arguments": [
+            {
+              "name": "name",
+              "description": "Project name",
+              "required": true,
+              "ordinal": 0
+            }
+          ],
+          "examples": [
+            {
+              "command": "taskmanager project archive \"Old Project\"",
+              "description": "Archive a project"
+            }
+          ]
+        }
+      }
+    },
+    "stats": {
+      "description": "Show task statistics",
+      "options": [
+        {
+          "name": "period",
+          "aliases": ["p"],
+          "description": "Time period",
+          "arguments": [
+            {
+              "name": "value",
+              "required": true,
+              "acceptedValues": ["today", "week", "month", "all"]
+            }
+          ]
+        },
+        {
+          "name": "project",
+          "description": "Filter by project",
+          "arguments": [
+            {
+              "name": "name",
+              "required": true
+            }
+          ]
+        }
+      ],
+      "examples": [
+        {
+          "command": "taskmanager stats",
+          "description": "Show all-time statistics"
+        },
+        {
+          "command": "taskmanager stats --period week",
+          "description": "Show statistics for the past week"
+        },
+        {
+          "command": "taskmanager stats --period month --project \"Website Redesign\"",
+          "description": "Show monthly statistics for a specific project"
+        }
+      ]
+    },
+    "export": {
+      "description": "Export tasks to various formats",
+      "arguments": [
+        {
+          "name": "output",
+          "description": "Output file path",
+          "required": true,
+          "ordinal": 0
+        }
+      ],
+      "options": [
+        {
+          "name": "format",
+          "aliases": ["f"],
+          "description": "Export format",
+          "arguments": [
+            {
+              "name": "type",
+              "required": true,
+              "acceptedValues": ["json", "csv", "markdown"]
+            }
+          ]
+        },
+        {
+          "name": "include-completed",
+          "description": "Include completed tasks"
+        },
+        {
+          "name": "project",
+          "description": "Filter by project",
+          "arguments": [
+            {
+              "name": "name",
+              "required": true
+            }
+          ]
+        }
+      ],
+      "examples": [
+        {
+          "command": "taskmanager export tasks.json",
+          "description": "Export to JSON format"
+        },
+        {
+          "command": "taskmanager export tasks.csv --format csv",
+          "description": "Export to CSV format"
+        },
+        {
+          "command": "taskmanager export report.md --format markdown --include-completed",
+          "description": "Export to Markdown including completed tasks"
+        }
+      ],
+      "exitCodes": [
+        {
+          "code": 0,
+          "description": "Export completed successfully"
+        },
+        {
+          "code": 1,
+          "description": "Export failed (e.g., invalid format, write error)"
+        }
+      ]
+    }
+  }
+}
