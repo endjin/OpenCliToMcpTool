@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.2.0-preview.1" />
+        <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.3" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.7" />
     </ItemGroup>
@@ -19,9 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\OpenCliToMcp.Generator\OpenCliToMcp.Generator.csproj"
-                          OutputItemType="Analyzer"
-                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\OpenCliToMcp.Generator\OpenCliToMcp.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
     <ItemGroup>
