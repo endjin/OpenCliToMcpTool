@@ -34,8 +34,38 @@ OpenCliToMcp/
 ### Prerequisites
 
 - .NET 9.0 SDK or later
+- .NET Compiler Platform SDK (required for source generator development)
 - Visual Studio 2022 or VS Code with C# Dev Kit
 - Claude Desktop or VS Code with MCP extension
+
+### Setup
+
+Before building the solution, ensure your development environment is properly configured:
+
+1. **Install .NET Compiler Platform SDK** (required for source generator development):
+   
+   This component must be installed via the **Visual Studio Installer**.
+   
+   - Open **Visual Studio Installer**.
+   - Click **Modify** on your Visual Studio installation.
+   - Go to the **Individual components** tab.
+   - Search for `.NET Compiler Platform SDK` and check the box.
+   - Click **Modify** to install.
+
+2. **Update .NET workloads** (for other components):
+   ```bash
+   dotnet workload update
+   ```
+
+3. **Restore NuGet packages**:
+   ```bash
+   dotnet restore
+   ```
+
+4. **Verify SDK installation**:
+   ```bash
+   dotnet --version
+   ```
 
 ### Building the Project
 
