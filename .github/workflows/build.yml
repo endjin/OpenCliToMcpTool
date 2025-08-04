@@ -53,22 +53,7 @@ jobs:
         environmentVariablesYaml: |
           ZF_NUGET_PUBLISH_SOURCE: ${{ (startsWith(github.ref, 'refs/tags/') || github.event.inputs.forcePublicNugetDestination == 'true') && 'https://api.nuget.org/v3/index.json' || format('https://nuget.pkg.github.com/{0}/index.json', github.repository_owner) }}
         secretsYaml: |
-          NUGET_API_KEY: "${{ startsWith(github.ref, 'refs/tags/') && secrets.NUGET_APIKEY || secrets.BUILD_PUBLISHER_PAT }}"
-          TestCosmosConfigurationOptions__AccountUri: ${{ vars.TESTS_COSMOSDBACCOUNTURI }}
-          TestCosmosConfigurationOptions__AccessKeyInKeyVault__VaultName: ${{ vars.TESTS_KEYVAULTNAME }}
-          TestCosmosConfigurationOptions__AccessKeyInKeyVault__SecretName: ${{ vars.TESTS_COSMOSDBKEYSECRETNAME }}
-          TestLegacyCosmosConfigurationOptions__AccountUri: ${{ vars.TESTS_COSMOSDBACCOUNTURI }}
-          TestLegacyCosmosConfigurationOptions__KeyVaultName: ${{ vars.TESTS_KEYVAULTNAME }}
-          TestLegacyCosmosConfigurationOptions__AccountKeySecretName: ${{ vars.TESTS_COSMOSDBKEYSECRETNAME }}
-          AzureServicesAuthConnectionString: "RunAs=Developer;DeveloperTool=AzureCli"
-          TestSettings__AzureStorageConnectionString: "${{ secrets.TESTS_AZURESTORAGECONNECTIONSTRING }}"
-          TenancyBlobStorageConfigurationOptions__AccountName: ${{ secrets.TESTS_AZURESTORAGECONNECTIONSTRING }}
-          TestBlobStorageConfigurationOptions__AccountName: ${{ secrets.TESTS_AZURESTORAGECONNECTIONSTRING }}
-          TestTableStorageConfigurationOptions__AccountName: ${{ secrets.TESTS_AZURESTORAGECONNECTIONSTRING }}
-          TestGremlinConfigurationOptions__HostName: ${{ vars.TESTS_COSMOSDBGREMLINHOSTNAME }}
-          TestGremlinConfigurationOptions__Port: ${{ vars.TESTS_COSMOSDBGREMLINCONFIGURATIONPORT }}
-          TestGremlinConfigurationOptions__AuthKeySecretName: ${{ vars.TESTS_COSMOSDBGREMLINACCOUNTKEYSECRETNAME }}
-          TestGremlinConfigurationOptions__KeyVaultName: ${{ vars.TESTS_KEYVAULTNAME }}
+          NUGET_API_KEY: "${{ startsWith(github.ref, 'refs/tags/') && secrets.ENDJIN_NUGET_APIKEY || secrets.ENDJIN_GITHUB_PUBLISHER_PAT }}"
         secretsEncryptionKey: ${{ secrets.SHARED_WORKFLOW_KEY }}
 
   build:
@@ -92,12 +77,12 @@ jobs:
       packagePhaseEnv: ${{ needs.prepareConfig.outputs.RESOLVED_ENV_VARS }}
       publishPhaseEnv: ${{ needs.prepareConfig.outputs.RESOLVED_ENV_VARS }}
     secrets:
-      compilePhaseAzureCredentials: ${{ secrets.AZURE_READER_CREDENTIALS }}
-      testPhaseAzureCredentials: ${{ secrets.TESTS_KV_READER_CREDENTIALS }}
+      compilePhaseAzureCredentials: ${{ secrets.ENDJIN_PROD_ACR_READER_CREDENTIALS }}
+      # testPhaseAzureCredentials: ${{ secrets.ENDJIN_TEST_KV_READER_CREDENTIALS }}
       # packagePhaseAzureCredentials: ${{ secrets.AZURE_PUBLISH_CREDENTIALS }}
       # publishPhaseAzureCredentials: ${{ secrets.AZURE_PUBLISH_CREDENTIALS }}
       # compilePhaseSecrets: ${{ needs.prepareConfig.outputs.RESOLVED_SECRETS }}
-      testPhaseSecrets: ${{ needs.prepareConfig.outputs.RESOLVED_SECRETS }}
+      # testPhaseSecrets: ${{ needs.prepareConfig.outputs.RESOLVED_SECRETS }}
       # packagePhaseSecrets: ${{ needs.prepareConfig.outputs.RESOLVED_SECRETS }}
       publishPhaseSecrets: ${{ needs.prepareConfig.outputs.RESOLVED_SECRETS }}
       secretsEncryptionKey: ${{ secrets.SHARED_WORKFLOW_KEY }}

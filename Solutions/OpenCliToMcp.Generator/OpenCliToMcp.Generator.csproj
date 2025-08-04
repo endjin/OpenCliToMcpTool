@@ -12,11 +12,13 @@
         <IsRoslynComponent>true</IsRoslynComponent>
         <!-- Package metadata -->
         <PackageId>OpenCliToMcp.Generator</PackageId>
-        <PackageVersion>1.0.0</PackageVersion>
-        <Authors>OpenCliToMcp</Authors>
-        <Description>Source generator for OpenCLI to MCP tool conversion</Description>
+        <Version>1.0.0</Version>
+        <Description>C# source generator that automatically generates MCP (Model Context Protocol) server code from OpenCLI tool definitions. Simplifies the creation of MCP tools by generating boilerplate code at compile time.</Description>
+        <PackageTags>mcp;model-context-protocol;source-generator;code-generation;opencli;roslyn;analyzer</PackageTags>
         <!-- Suppress the warning about System.Text.Json version -->
-        <NoWarn>$(NoWarn);NU1608</NoWarn>
+        <NoWarn>$(NoWarn);NU1608;NU5128</NoWarn>
+        <!-- Source generators don't need symbol packages -->
+        <IncludeSymbols>false</IncludeSymbols>
     </PropertyGroup>
 
     <ItemGroup>
@@ -26,6 +28,9 @@
     <!-- Package the generator assembly in the analyzer directory -->
     <ItemGroup>
         <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <!-- Include analyzer release notes -->
+        <None Include="AnalyzerReleases.Shipped.md" Pack="true" PackagePath="\" />
+        <None Include="AnalyzerReleases.Unshipped.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
 </Project>

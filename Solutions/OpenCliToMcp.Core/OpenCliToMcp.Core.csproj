@@ -8,7 +8,8 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsPackable>true</IsPackable>
     <PackageId>OpenCliToMcp.Core</PackageId>
-    <Description>Core components for OpenCLI to MCP tool conversion</Description>
+    <Description>Core library for creating MCP (Model Context Protocol) servers from OpenCLI tool definitions. Provides base classes and interfaces for CLI execution, process management, and response formatting.</Description>
+    <PackageTags>mcp;model-context-protocol;cli;opencli;tool-conversion;cli-executor</PackageTags>
     <Version>1.0.0</Version>
   </PropertyGroup>
 

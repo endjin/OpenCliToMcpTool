@@ -1,0 +1,40 @@
+<Project>
+  <PropertyGroup>
+    <!-- Common package metadata -->
+    <Authors>Howard van Rooijen</Authors>
+    <Company>Endjin Limited</Company>
+    <Copyright>Copyright © Endjin Limited $([System.DateTime]::Now.Year)</Copyright>
+    <PackageProjectUrl>https://github.com/endjin/OpenCliToMcpTool</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/endjin/OpenCliToMcpTool.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    
+    <!-- Package icons and READMEs -->
+    <PackageIcon Condition="Exists('$(MSBuildProjectDirectory)/icon.png')">icon.png</PackageIcon>
+    <PackageReadmeFile Condition="Exists('$(MSBuildProjectDirectory)/README.md')">README.md</PackageReadmeFile>
+    
+    <!-- Enable deterministic builds for CI -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    
+    <!-- SourceLink support -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+  
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <!-- Package icon if it exists -->
+    <None Include="$(MSBuildProjectDirectory)/icon.png" Pack="true" PackagePath="\" Condition="Exists('$(MSBuildProjectDirectory)/icon.png')" />
+    
+    <!-- Package README if it exists -->
+    <None Include="$(MSBuildProjectDirectory)/README.md" Pack="true" PackagePath="\" Condition="Exists('$(MSBuildProjectDirectory)/README.md')" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <!-- SourceLink support -->
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+  </ItemGroup>
+</Project>
