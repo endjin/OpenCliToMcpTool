@@ -4,6 +4,7 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
         <ImplicitUsings>enable</ImplicitUsings>
         <!-- Enable source generator file emission for debugging -->
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
