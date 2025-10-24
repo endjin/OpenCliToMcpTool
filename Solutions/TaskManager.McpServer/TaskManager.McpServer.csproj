@@ -11,7 +11,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.3" />
+        <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
     </ItemGroup>
 
