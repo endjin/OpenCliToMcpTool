@@ -11,8 +11,8 @@
 
     <ItemGroup>
         <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.3" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
     </ItemGroup>
 
     <ItemGroup>
