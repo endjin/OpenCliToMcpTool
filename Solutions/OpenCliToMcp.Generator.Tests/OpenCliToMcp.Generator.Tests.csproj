@@ -30,7 +30,7 @@
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     
     <!-- Code Analysis -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
     
     <!-- Additional Tools -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
