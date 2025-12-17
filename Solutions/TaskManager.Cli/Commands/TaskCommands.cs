@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Text.Json;
 using TaskManager.Cli.Models;
 using TaskManager.Cli.Services;
+using System.Threading;
 
 namespace TaskManager.Cli.Commands;
 
@@ -40,7 +41,7 @@ public class TaskAddCommand : Command<TaskAddCommand.Settings>
         public string? Tags { get; set; }
     }
 
-    public override int Execute(CommandContext context, Settings settings)
+    public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         TaskService service = new();
         
@@ -121,7 +122,7 @@ public class TaskUpdateCommand : Command<TaskUpdateCommand.Settings>
         public bool ClearAssignee { get; set; }
     }
 
-    public override int Execute(CommandContext context, Settings settings)
+    public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         TaskService service = new();
         TaskItem? task = service.GetTask(settings.Id);
@@ -174,7 +175,7 @@ public class TaskDeleteCommand : Command<TaskDeleteCommand.Settings>
         public bool Force { get; set; }
     }
 
-    public override int Execute(CommandContext context, Settings settings)
+    public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         TaskService service = new();
         TaskItem? task = service.GetTask(settings.Id);
@@ -218,7 +219,7 @@ public class TaskShowCommand : Command<TaskShowCommand.Settings>
         public string Format { get; set; } = "table";
     }
 
-    public override int Execute(CommandContext context, Settings settings)
+    public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         TaskService service = new();
         TaskItem? task = service.GetTask(settings.Id);

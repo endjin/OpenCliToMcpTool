@@ -19,7 +19,7 @@ public class LocationAddCommand : Command<LocationAddCommand.Settings>
         public string? Nickname { get; set; }
     }
     
-    public override int Execute(CommandContext context, Settings settings)
+    public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         LocationService service = new();
         
@@ -48,7 +48,7 @@ public class LocationAddCommand : Command<LocationAddCommand.Settings>
 
 public class LocationListCommand : Command
 {
-    public override int Execute(CommandContext context)
+    public override int Execute(CommandContext context, CancellationToken cancellationToken)
     {
         LocationService service = new();
         List<Location> locations = service.GetAll().ToList();
@@ -94,7 +94,7 @@ public class LocationRemoveCommand : Command<LocationRemoveCommand.Settings>
         public bool Force { get; set; }
     }
     
-    public override int Execute(CommandContext context, Settings settings)
+    public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         LocationService service = new();
         Location? location = service.Get(settings.City);

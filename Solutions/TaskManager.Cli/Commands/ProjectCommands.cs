@@ -3,6 +3,7 @@ using Spectre.Console.Cli;
 using System.ComponentModel;
 using TaskManager.Cli.Models;
 using TaskManager.Cli.Services;
+using System.Threading;
 
 namespace TaskManager.Cli.Commands;
 
@@ -15,7 +16,7 @@ public class ProjectListCommand : Command<ProjectListCommand.Settings>
         public bool ActiveOnly { get; set; }
     }
 
-    public override int Execute(CommandContext context, Settings settings)
+    public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         ProjectService service = new();
         IEnumerable<Project> projects = service.GetAllProjects();
@@ -69,7 +70,7 @@ public class ProjectCreateCommand : Command<ProjectCreateCommand.Settings>
         public string? Team { get; set; }
     }
 
-    public override int Execute(CommandContext context, Settings settings)
+    public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         ProjectService service = new();
 
@@ -102,7 +103,7 @@ public class ProjectArchiveCommand : Command<ProjectArchiveCommand.Settings>
         public string Name { get; set; } = string.Empty;
     }
 
-    public override int Execute(CommandContext context, Settings settings)
+    public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         ProjectService service = new();
 

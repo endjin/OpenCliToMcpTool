@@ -3,6 +3,7 @@ using Spectre.Console.Cli;
 using System.ComponentModel;
 using TaskManager.Cli.Models;
 using TaskManager.Cli.Services;
+using System.Threading;
 
 namespace TaskManager.Cli.Commands;
 
@@ -19,7 +20,7 @@ public class StatsCommand : Command<StatsCommand.Settings>
         public string? Project { get; set; }
     }
 
-    public override int Execute(CommandContext context, Settings settings)
+    public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         TaskService service = new();
         IEnumerable<TaskItem> tasks = service.GetAllTasks();

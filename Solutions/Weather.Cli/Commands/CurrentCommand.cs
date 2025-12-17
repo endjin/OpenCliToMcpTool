@@ -27,7 +27,7 @@ public class CurrentCommand : AsyncCommand<CurrentCommand.Settings>
         public string Format { get; set; } = "text";
     }
     
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         WeatherService service = new();
         

@@ -27,7 +27,7 @@ public class ForecastCommand : AsyncCommand<ForecastCommand.Settings>
         public string Format { get; set; } = "table";
     }
     
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         if (settings.Days < 1 || settings.Days > 14)
         {
