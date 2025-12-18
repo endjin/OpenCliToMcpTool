@@ -3,7 +3,6 @@ using Spectre.Console.Cli;
 using System.ComponentModel;
 using TaskManager.Cli.Models;
 using TaskManager.Cli.Services;
-using System.Threading;
 
 namespace TaskManager.Cli.Commands;
 

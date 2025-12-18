@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Text.Json;
 using TaskManager.Cli.Models;
 using TaskManager.Cli.Services;
-using System.Threading;
 
 namespace TaskManager.Cli.Commands;
 
