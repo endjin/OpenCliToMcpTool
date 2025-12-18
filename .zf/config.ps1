@@ -36,7 +36,7 @@ $ProjectsToPublish = @()
 $NuSpecFilesToPackage = @()
 $NugetPublishSource = property ZF_NUGET_PUBLISH_SOURCE "$here/_local-nuget-feed"
 $IncludeAssembliesInCodeCoverage = "OpenCliToMcp*"
-$ExcludeAssembliesInCodeCoverage = ""
+$ExcludeAssembliesInCodeCoverage = "*Tests*"
 
 # Customise the build process
 
