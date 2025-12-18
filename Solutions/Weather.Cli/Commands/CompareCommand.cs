@@ -18,8 +18,8 @@ public class CompareCommand : AsyncCommand<CompareCommand.Settings>
         [CommandOption("-u|--unit")]
         public TemperatureUnit Unit { get; set; } = TemperatureUnit.Celsius;
     }
-    
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         if (settings.Cities.Length < 2)
         {

@@ -60,8 +60,7 @@ jobs:
     needs: prepareConfig
     uses: endjin/Endjin.RecommendedPractices.GitHubActions/.github/workflows/scripted-build-matrix-pipeline.yml@main
     with:
-      netSdkVersion: '8.x'
-      additionalNetSdkVersion: '9.x'
+      netSdkVersion: '10.x'
       # workflow_dispatch inputs are always strings, the type property is just for the UI
       forcePublish: ${{ github.event.inputs.forcePublish == 'true' }}
       skipCleanup: ${{ github.event.inputs.skipCleanup == 'true' }}
