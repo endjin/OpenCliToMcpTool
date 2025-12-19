@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Text.Json;
 
 namespace OpenCliToMcp.Generator.Models;
 
 // Value-equatable records for proper incremental generator caching
 public sealed record OpenCliSpec(
-    string? Opencli,
-    OpenCliInfo? Info,
+    string Opencli,
+    OpenCliInfo Info,
     OpenCliConventions? Conventions,
     IReadOnlyList<OpenCliArgument>? Arguments,
     IReadOnlyList<OpenCliOption>? Options,
@@ -38,16 +38,16 @@ public sealed record OpenCliSpec(
     public override int GetHashCode()
     {
         int hashCode = -1521134295;
-        hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Opencli);
-        hashCode = hashCode * -1521134295 + EqualityComparer<OpenCliInfo?>.Default.GetHashCode(Info);
+        hashCode = hashCode * -1521134295 + Opencli.GetHashCode();
+        hashCode = hashCode * -1521134295 + Info.GetHashCode();
         hashCode = hashCode * -1521134295 + EqualityComparer<OpenCliConventions?>.Default.GetHashCode(Conventions);
-        hashCode = hashCode * -1521134295 + (Arguments?.Count ?? 0).GetHashCode();
-        hashCode = hashCode * -1521134295 + (Options?.Count ?? 0).GetHashCode();
-        hashCode = hashCode * -1521134295 + (Commands?.Count ?? 0).GetHashCode();
-        hashCode = hashCode * -1521134295 + (ExitCodes?.Count ?? 0).GetHashCode();
-        hashCode = hashCode * -1521134295 + (Examples?.Count ?? 0).GetHashCode();
+        hashCode = hashCode * -1521134295 + (Arguments?.Count ?? 0);
+        hashCode = hashCode * -1521134295 + (Options?.Count ?? 0);
+        hashCode = hashCode * -1521134295 + (Commands?.Count ?? 0);
+        hashCode = hashCode * -1521134295 + (ExitCodes?.Count ?? 0);
+        hashCode = hashCode * -1521134295 + (Examples?.Count ?? 0);
         hashCode = hashCode * -1521134295 + Interactive.GetHashCode();
-        hashCode = hashCode * -1521134295 + (Metadata?.Count ?? 0).GetHashCode();
+        hashCode = hashCode * -1521134295 + (Metadata?.Count ?? 0);
         return hashCode;
     }
 
@@ -85,12 +85,12 @@ public sealed record OpenCliSpec(
 }
 
 public sealed record OpenCliInfo(
-    string? Title,
+    string Title,
     string? Summary,
     string? Description,
     OpenCliContact? Contact,
     OpenCliLicense? License,
-    string? Version
+    string Version
 ) : IEquatable<OpenCliInfo>
 {
     public bool Equals(OpenCliInfo? other)
@@ -109,12 +109,12 @@ public sealed record OpenCliInfo(
     public override int GetHashCode()
     {
         int hashCode = -1521134295;
-        hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Title);
+        hashCode = hashCode * -1521134295 + Title.GetHashCode();
         hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Summary);
         hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Description);
         hashCode = hashCode * -1521134295 + EqualityComparer<OpenCliContact?>.Default.GetHashCode(Contact);
         hashCode = hashCode * -1521134295 + EqualityComparer<OpenCliLicense?>.Default.GetHashCode(License);
-        hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Version);
+        hashCode = hashCode * -1521134295 + Version.GetHashCode();
         return hashCode;
     }
 }
@@ -191,29 +191,36 @@ public sealed record OpenCliLicense(
 }
 
 public sealed record OpenCliMetadata(
-    string? Name,
-    object? Value
+    string Name,
+    JsonElement? Value
 ) : IEquatable<OpenCliMetadata>
 {
     public bool Equals(OpenCliMetadata? other)
     {
         if (ReferenceEquals(this, other)) return true;
         if (other is null) return false;
-        
-        return Name == other.Name && Equals(Value, other.Value);
+
+        return Name == other.Name && JsonElementEquals(Value, other.Value);
     }
 
     public override int GetHashCode()
     {
         int hashCode = -1521134295;
-        hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Name);
-        hashCode = hashCode * -1521134295 + (Value?.GetHashCode() ?? 0);
+        hashCode = hashCode * -1521134295 + Name.GetHashCode();
+        hashCode = hashCode * -1521134295 + (Value?.GetRawText().GetHashCode() ?? 0);
         return hashCode;
+    }
+
+    private static bool JsonElementEquals(JsonElement? a, JsonElement? b)
+    {
+        if (!a.HasValue && !b.HasValue) return true;
+        if (!a.HasValue || !b.HasValue) return false;
+        return a.Value.GetRawText() == b.Value.GetRawText();
     }
 }
 
 public sealed record OpenCliCommand(
-    string? Name,
+    string Name,
     IReadOnlyList<string>? Aliases,
     string? Description,
     IReadOnlyList<OpenCliArgument>? Arguments,
@@ -247,23 +254,23 @@ public sealed record OpenCliCommand(
     public override int GetHashCode()
     {
         int hashCode = -1521134295;
-        hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Name);
-        hashCode = hashCode * -1521134295 + (Aliases?.Count ?? 0).GetHashCode();
+        hashCode = hashCode * -1521134295 + Name.GetHashCode();
+        hashCode = hashCode * -1521134295 + (Aliases?.Count ?? 0);
         hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Description);
-        hashCode = hashCode * -1521134295 + (Arguments?.Count ?? 0).GetHashCode();
-        hashCode = hashCode * -1521134295 + (Options?.Count ?? 0).GetHashCode();
-        hashCode = hashCode * -1521134295 + (Commands?.Count ?? 0).GetHashCode();
-        hashCode = hashCode * -1521134295 + (ExitCodes?.Count ?? 0).GetHashCode();
+        hashCode = hashCode * -1521134295 + (Arguments?.Count ?? 0);
+        hashCode = hashCode * -1521134295 + (Options?.Count ?? 0);
+        hashCode = hashCode * -1521134295 + (Commands?.Count ?? 0);
+        hashCode = hashCode * -1521134295 + (ExitCodes?.Count ?? 0);
         hashCode = hashCode * -1521134295 + Hidden.GetHashCode();
-        hashCode = hashCode * -1521134295 + (Examples?.Count ?? 0).GetHashCode();
+        hashCode = hashCode * -1521134295 + (Examples?.Count ?? 0);
         hashCode = hashCode * -1521134295 + Interactive.GetHashCode();
-        hashCode = hashCode * -1521134295 + (Metadata?.Count ?? 0).GetHashCode();
+        hashCode = hashCode * -1521134295 + (Metadata?.Count ?? 0);
         return hashCode;
     }
 }
 
 public sealed record OpenCliArgument(
-    string? Name,
+    string Name,
     bool Required,
     OpenCliArity? Arity,
     IReadOnlyList<string>? AcceptedValues,
@@ -291,14 +298,14 @@ public sealed record OpenCliArgument(
     public override int GetHashCode()
     {
         int hashCode = -1521134295;
-        hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Name);
+        hashCode = hashCode * -1521134295 + Name.GetHashCode();
         hashCode = hashCode * -1521134295 + Required.GetHashCode();
         hashCode = hashCode * -1521134295 + EqualityComparer<OpenCliArity?>.Default.GetHashCode(Arity);
-        hashCode = hashCode * -1521134295 + (AcceptedValues?.Count ?? 0).GetHashCode();
+        hashCode = hashCode * -1521134295 + (AcceptedValues?.Count ?? 0);
         hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Group);
         hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Description);
         hashCode = hashCode * -1521134295 + Hidden.GetHashCode();
-        hashCode = hashCode * -1521134295 + (Metadata?.Count ?? 0).GetHashCode();
+        hashCode = hashCode * -1521134295 + (Metadata?.Count ?? 0);
         return hashCode;
     }
 }
@@ -319,14 +326,14 @@ public sealed record OpenCliArity(
     public override int GetHashCode()
     {
         int hashCode = -1521134295;
-        hashCode = hashCode * -1521134295 + Minimum.GetHashCode();
-        hashCode = hashCode * -1521134295 + Maximum.GetHashCode();
+        hashCode = hashCode * -1521134295 + Minimum;
+        hashCode = hashCode * -1521134295 + (Maximum ?? 0);
         return hashCode;
     }
 }
 
 public sealed record OpenCliOption(
-    string? Name,
+    string Name,
     bool Required,
     IReadOnlyList<string>? Aliases,
     IReadOnlyList<OpenCliArgument>? Arguments,
@@ -356,15 +363,15 @@ public sealed record OpenCliOption(
     public override int GetHashCode()
     {
         int hashCode = -1521134295;
-        hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Name);
+        hashCode = hashCode * -1521134295 + Name.GetHashCode();
         hashCode = hashCode * -1521134295 + Required.GetHashCode();
-        hashCode = hashCode * -1521134295 + (Aliases?.Count ?? 0).GetHashCode();
-        hashCode = hashCode * -1521134295 + (Arguments?.Count ?? 0).GetHashCode();
+        hashCode = hashCode * -1521134295 + (Aliases?.Count ?? 0);
+        hashCode = hashCode * -1521134295 + (Arguments?.Count ?? 0);
         hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Group);
         hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Description);
         hashCode = hashCode * -1521134295 + Recursive.GetHashCode();
         hashCode = hashCode * -1521134295 + Hidden.GetHashCode();
-        hashCode = hashCode * -1521134295 + (Metadata?.Count ?? 0).GetHashCode();
+        hashCode = hashCode * -1521134295 + (Metadata?.Count ?? 0);
         return hashCode;
     }
 }
@@ -385,7 +392,7 @@ public sealed record OpenCliExitCode(
     public override int GetHashCode()
     {
         int hashCode = -1521134295;
-        hashCode = hashCode * -1521134295 + Code.GetHashCode();
+        hashCode = hashCode * -1521134295 + Code;
         hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(Description);
         return hashCode;
     }

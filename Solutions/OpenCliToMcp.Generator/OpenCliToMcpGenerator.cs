@@ -328,18 +328,18 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
         using JsonDocument doc = JsonDocument.Parse(jsonContent, jsonOptions);
         JsonElement root = doc.RootElement;
         
-        string? opencli = root.GetPropertyOrNull("opencli").GetString() ?? root.GetPropertyOrNull("schemaVersion").GetString();
+        string opencli = root.GetPropertyOrNull("opencli").GetString() ?? root.GetPropertyOrNull("schemaVersion").GetString() ?? "1.0.0";
         
         // Parse info section
-        OpenCliInfo? info = null;
+        OpenCliInfo info;
         JsonElement? infoObj = root.GetPropertyOrNull("info") ?? root.GetPropertyOrNull("cliInfo");
         if (infoObj != null)
         {
-            string? title = infoObj.Value.GetPropertyOrNull("title").GetString() ?? infoObj.Value.GetPropertyOrNull("name").GetString();
-            string? version = infoObj.Value.GetPropertyOrNull("version").GetString();
+            string title = infoObj.Value.GetPropertyOrNull("title").GetString() ?? infoObj.Value.GetPropertyOrNull("name").GetString() ?? "";
+            string version = infoObj.Value.GetPropertyOrNull("version").GetString() ?? "";
             string? description = infoObj.Value.GetPropertyOrNull("description").GetString();
             string? summary = infoObj.Value.GetPropertyOrNull("summary").GetString();
-            
+
             OpenCliContact? contact = null;
             JsonElement? contactObj = infoObj.Value.GetPropertyOrNull("contact");
             if (contactObj != null)
@@ -361,8 +361,12 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                     licenseObj.Value.GetPropertyOrNull("url").GetString()
                 );
             }
-            
+
             info = new OpenCliInfo(title, summary, description, contact, license, version);
+        }
+        else
+        {
+            info = new OpenCliInfo("", null, null, null, null, "");
         }
         
         // Parse conventions
@@ -429,7 +433,7 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
     
     private static OpenCliCommand? ParseCommand(JsonElement cmdValue, string? commandName = null)
     {
-        string? name = commandName ?? cmdValue.GetPropertyOrNull("name").GetString();
+        string name = commandName ?? cmdValue.GetPropertyOrNull("name").GetString() ?? "";
         string? description = cmdValue.GetPropertyOrNull("description").GetString();
         bool hidden = cmdValue.GetPropertyOrNull("hidden").GetBoolean() ?? false;
         bool interactive = cmdValue.GetPropertyOrNull("interactive").GetBoolean() ?? false;
@@ -457,7 +461,7 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
             
             foreach (JsonElement arg in argumentsArray.Value.EnumerateArray())
             {
-                string? argName = arg.GetPropertyOrNull("name").GetString();
+                string argName = arg.GetPropertyOrNull("name").GetString() ?? "";
                 string? desc = arg.GetPropertyOrNull("description").GetString();
                 bool required = (arg.GetPropertyOrNull("required").GetBoolean() ?? false) || (arg.GetPropertyOrNull("isRequired").GetBoolean() ?? false);
                 bool argHidden = arg.GetPropertyOrNull("hidden").GetBoolean() ?? false;
@@ -608,7 +612,7 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
         
         foreach (JsonElement opt in optionsArray.EnumerateArray())
         {
-            string? name = opt.GetPropertyOrNull("name").GetString();
+            string name = opt.GetPropertyOrNull("name").GetString() ?? "";
             string? description = opt.GetPropertyOrNull("description").GetString();
             bool required = opt.GetPropertyOrNull("required").GetBoolean() ?? false;
             bool recursive = opt.GetPropertyOrNull("recursive").GetBoolean() ?? false;
@@ -654,12 +658,12 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                 
                 foreach (JsonElement arg in argumentsArray.Value.EnumerateArray())
                 {
-                    string? argName = arg.GetPropertyOrNull("name").GetString();
+                    string argName = arg.GetPropertyOrNull("name").GetString() ?? "";
                     string? argDesc = arg.GetPropertyOrNull("description").GetString();
                     bool argRequired = (arg.GetPropertyOrNull("required").GetBoolean() ?? false) || (arg.GetPropertyOrNull("isRequired").GetBoolean() ?? false);
                     bool argHidden = arg.GetPropertyOrNull("hidden").GetBoolean() ?? false;
                     string? argGroup = arg.GetPropertyOrNull("group").GetString();
-                    
+
                     argsList.Add(new OpenCliArgument(argName, argRequired, null, null, argGroup, argDesc, argHidden, null));
                 }
                 
