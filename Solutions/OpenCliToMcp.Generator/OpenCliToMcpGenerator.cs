@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 
 namespace OpenCliToMcp.Generator;
 
@@ -129,7 +130,8 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                 ctx.ReportDiagnostic(Diagnostic.Create(
                     DiagnosticDescriptors.InvalidJsonFormat,
                     Location.None,
-                    result.FilePath));
+                    result.FilePath,
+                    result.Error));
             });
 
         // Extract valid specs
@@ -288,7 +290,8 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                 ctx.ReportDiagnostic(Diagnostic.Create(
                     DiagnosticDescriptors.InvalidJsonFormat,
                     pair.target.AttributeLocation,
-                    pair.Item2!.FilePath));
+                    pair.Item2!.FilePath,
+                    pair.Item2!.Error));
             });
         
         // Generate partial classes for attribute targets
@@ -316,43 +319,106 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
     
     private static OpenCliSpec? ParseOpenCliSpec(string jsonContent)
     {
-        JsonValue root = SimpleJsonParser.Parse(jsonContent);
+        var jsonOptions = new JsonDocumentOptions
+        {
+            AllowTrailingCommas = true,
+            CommentHandling = JsonCommentHandling.Skip
+        };
         
-        string? opencli = root.GetProperty("opencli")?.GetString();
+        using JsonDocument doc = JsonDocument.Parse(jsonContent, jsonOptions);
+        JsonElement root = doc.RootElement;
+        
+        string opencli = root.GetPropertyOrNull("opencli").GetString() ?? root.GetPropertyOrNull("schemaVersion").GetString() ?? "1.0.0";
         
         // Parse info section
-        OpenCliInfo? info = null;
-        JsonValue? infoObj = root.GetProperty("info");
+        OpenCliInfo info;
+        JsonElement? infoObj = root.GetPropertyOrNull("info") ?? root.GetPropertyOrNull("cliInfo");
         if (infoObj != null)
         {
-            string? title = infoObj.GetProperty("title")?.GetString();
-            string? version = infoObj.GetProperty("version")?.GetString();
-            string? description = infoObj.GetProperty("description")?.GetString();
-            
-            info = new OpenCliInfo(title, version, description);
+            string title = infoObj.Value.GetPropertyOrNull("title").GetString() ?? infoObj.Value.GetPropertyOrNull("name").GetString() ?? "";
+            string version = infoObj.Value.GetPropertyOrNull("version").GetString() ?? "";
+            string? description = infoObj.Value.GetPropertyOrNull("description").GetString();
+            string? summary = infoObj.Value.GetPropertyOrNull("summary").GetString();
+
+            OpenCliContact? contact = null;
+            JsonElement? contactObj = infoObj.Value.GetPropertyOrNull("contact");
+            if (contactObj != null)
+            {
+                contact = new OpenCliContact(
+                    contactObj.Value.GetPropertyOrNull("name").GetString(),
+                    contactObj.Value.GetPropertyOrNull("url").GetString(),
+                    contactObj.Value.GetPropertyOrNull("email").GetString()
+                );
+            }
+
+            OpenCliLicense? license = null;
+            JsonElement? licenseObj = infoObj.Value.GetPropertyOrNull("license");
+            if (licenseObj != null)
+            {
+                license = new OpenCliLicense(
+                    licenseObj.Value.GetPropertyOrNull("name").GetString(),
+                    licenseObj.Value.GetPropertyOrNull("identifier").GetString(),
+                    licenseObj.Value.GetPropertyOrNull("url").GetString()
+                );
+            }
+
+            info = new OpenCliInfo(title, summary, description, contact, license, version);
+        }
+        else
+        {
+            info = new OpenCliInfo("", null, null, null, null, "");
         }
         
+        // Parse conventions
+        OpenCliConventions? conventions = null;
+        JsonElement? conventionsObj = root.GetPropertyOrNull("conventions");
+        if (conventionsObj != null)
+        {
+            conventions = new OpenCliConventions(
+                conventionsObj.Value.GetPropertyOrNull("groupOptions").GetBoolean() ?? true,
+                conventionsObj.Value.GetPropertyOrNull("optionArgumentSeparator").GetString()
+            );
+        }
+
         // Parse global options
         IReadOnlyList<OpenCliOption>? options = null;
-        JsonValue? globalOptions = root.GetProperty("options");
-        if (globalOptions != null && globalOptions.Type == JsonValueType.Array)
+        JsonElement? globalOptions = root.GetPropertyOrNull("options");
+        if (globalOptions != null && globalOptions.Value.ValueKind == JsonValueKind.Array)
         {
-            options = ParseOptions(globalOptions);
+            options = ParseOptions(globalOptions.Value);
         }
         
         // Parse commands
         IReadOnlyDictionary<string, OpenCliCommand>? commands = null;
-        JsonValue? commandsObj = root.GetProperty("commands");
-        if (commandsObj != null)
+        JsonElement? commandsObj = root.GetPropertyOrNull("commands");
+        if (commandsObj.HasValue)
         {
             Dictionary<string, OpenCliCommand> commandsDict = new Dictionary<string, OpenCliCommand>();
             
-            foreach (KeyValuePair<string, JsonValue> cmd in commandsObj.EnumerateObject())
+            if (commandsObj.Value.ValueKind == JsonValueKind.Object)
             {
-                OpenCliCommand? command = ParseCommand(cmd.Value);
-                if (command != null)
+                foreach (JsonProperty cmd in commandsObj.Value.EnumerateObject())
                 {
-                    commandsDict[cmd.Key] = command;
+                    OpenCliCommand? command = ParseCommand(cmd.Value, cmd.Name);
+                    if (command != null)
+                    {
+                        commandsDict[cmd.Name] = command;
+                    }
+                }
+            }
+            else if (commandsObj.Value.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement cmd in commandsObj.Value.EnumerateArray())
+                {
+                    string? name = cmd.GetPropertyOrNull("name").GetString();
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        OpenCliCommand? command = ParseCommand(cmd, name);
+                        if (command != null)
+                        {
+                            commandsDict[name!] = command;
+                        }
+                    }
                 }
             }
             
@@ -362,28 +428,69 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
             }
         }
         
-        return new OpenCliSpec(opencli, info, commands, options);
+        return new OpenCliSpec(opencli, info, conventions, null, options, commands, null, null, false, null);
     }
     
-    private static OpenCliCommand? ParseCommand(JsonValue cmdValue)
+    private static OpenCliCommand? ParseCommand(JsonElement cmdValue, string? commandName = null)
     {
-        string? description = cmdValue.GetProperty("description")?.GetString();
+        string name = commandName ?? cmdValue.GetPropertyOrNull("name").GetString() ?? "";
+        string? description = cmdValue.GetPropertyOrNull("description").GetString();
+        bool hidden = cmdValue.GetPropertyOrNull("hidden").GetBoolean() ?? false;
+        bool interactive = cmdValue.GetPropertyOrNull("interactive").GetBoolean() ?? false;
         
+        // Parse aliases
+        IReadOnlyList<string>? aliases = null;
+        JsonElement? aliasesArray = cmdValue.GetPropertyOrNull("aliases");
+        if (aliasesArray.HasValue && aliasesArray.Value.ValueKind == JsonValueKind.Array)
+        {
+            List<string> aliasesList = [];
+            foreach (JsonElement alias in aliasesArray.Value.EnumerateArray())
+            {
+                string? aliasStr = alias.GetString();
+                if (aliasStr != null) aliasesList.Add(aliasStr);
+            }
+            if (aliasesList.Count > 0) aliases = aliasesList.ToImmutableList();
+        }
+
         // Parse arguments
         IReadOnlyList<OpenCliArgument>? arguments = null;
-        JsonValue? argumentsArray = cmdValue.GetProperty("arguments");
-        if (argumentsArray is { Type: JsonValueType.Array })
+        JsonElement? argumentsArray = cmdValue.GetPropertyOrNull("arguments");
+        if (argumentsArray.HasValue && argumentsArray.Value.ValueKind == JsonValueKind.Array)
         {
             List<OpenCliArgument> argsList = [];
             
-            foreach (JsonValue? arg in argumentsArray.EnumerateArray())
+            foreach (JsonElement arg in argumentsArray.Value.EnumerateArray())
             {
-                string? name = arg.GetProperty("name")?.GetString();
-                string? desc = arg.GetProperty("description")?.GetString();
-                bool required = arg.GetProperty("required")?.GetBoolean() ?? false;
-                int ordinal = arg.GetProperty("ordinal")?.GetInt32() ?? 0;
+                string argName = arg.GetPropertyOrNull("name").GetString() ?? "";
+                string? desc = arg.GetPropertyOrNull("description").GetString();
+                bool required = (arg.GetPropertyOrNull("required").GetBoolean() ?? false) || (arg.GetPropertyOrNull("isRequired").GetBoolean() ?? false);
+                bool argHidden = arg.GetPropertyOrNull("hidden").GetBoolean() ?? false;
+                string? group = arg.GetPropertyOrNull("group").GetString();
                 
-                argsList.Add(new OpenCliArgument(name, desc, required, ordinal));
+                OpenCliArity? arity = null;
+                JsonElement? arityObj = arg.GetPropertyOrNull("arity");
+                if (arityObj != null)
+                {
+                    arity = new OpenCliArity(
+                        arityObj.Value.GetPropertyOrNull("minimum").GetInt32() ?? 1,
+                        arityObj.Value.GetPropertyOrNull("maximum").GetInt32()
+                    );
+                }
+
+                IReadOnlyList<string>? acceptedValues = null;
+                JsonElement? acceptedValuesArray = arg.GetPropertyOrNull("acceptedValues");
+                if (acceptedValuesArray.HasValue && acceptedValuesArray.Value.ValueKind == JsonValueKind.Array)
+                {
+                    List<string> valuesList = [];
+                    foreach (JsonElement val in acceptedValuesArray.Value.EnumerateArray())
+                    {
+                        string? valStr = val.GetString();
+                        if (valStr != null) valuesList.Add(valStr);
+                    }
+                    if (valuesList.Count > 0) acceptedValues = valuesList.ToImmutableList();
+                }
+                
+                argsList.Add(new OpenCliArgument(argName, required, arity, acceptedValues, group, desc, argHidden, null));
             }
             
             if (argsList.Count > 0)
@@ -394,23 +501,23 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
         
         // Parse options
         IReadOnlyList<OpenCliOption>? options = null;
-        JsonValue? optionsArray = cmdValue.GetProperty("options");
-        if (optionsArray is { Type: JsonValueType.Array })
+        JsonElement? optionsArray = cmdValue.GetPropertyOrNull("options");
+        if (optionsArray.HasValue && optionsArray.Value.ValueKind == JsonValueKind.Array)
         {
-            options = ParseOptions(optionsArray);
+            options = ParseOptions(optionsArray.Value);
         }
         
         // Parse exit codes
         IReadOnlyList<OpenCliExitCode>? exitCodes = null;
-        JsonValue? exitCodesArray = cmdValue.GetProperty("exitCodes");
-        if (exitCodesArray is { Type: JsonValueType.Array })
+        JsonElement? exitCodesArray = cmdValue.GetPropertyOrNull("exitCodes");
+        if (exitCodesArray.HasValue && exitCodesArray.Value.ValueKind == JsonValueKind.Array)
         {
             List<OpenCliExitCode> exitCodesList = [];
             
-            foreach (JsonValue? exitCode in exitCodesArray.EnumerateArray())
+            foreach (JsonElement exitCode in exitCodesArray.Value.EnumerateArray())
             {
-                int code = exitCode.GetProperty("code")?.GetInt32() ?? 0;
-                string? exitDesc = exitCode.GetProperty("description")?.GetString();
+                int code = exitCode.GetPropertyOrNull("code").GetInt32() ?? 0;
+                string? exitDesc = exitCode.GetPropertyOrNull("description").GetString();
                 
                 exitCodesList.Add(new OpenCliExitCode(code, exitDesc));
             }
@@ -422,18 +529,32 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
         }
         
         // Parse examples
-        IReadOnlyList<OpenCliExample>? examples = null;
-        JsonValue? examplesArray = cmdValue.GetProperty("examples");
-        if (examplesArray is { Type: JsonValueType.Array })
+        IReadOnlyList<string>? examples = null;
+        JsonElement? examplesArray = cmdValue.GetPropertyOrNull("examples");
+        if (examplesArray.HasValue && examplesArray.Value.ValueKind == JsonValueKind.Array)
         {
-            List<OpenCliExample> examplesList = [];
+            List<string> examplesList = [];
             
-            foreach (JsonValue? example in examplesArray.EnumerateArray())
+            foreach (JsonElement example in examplesArray.Value.EnumerateArray())
             {
-                string? cmd = example.GetProperty("command")?.GetString();
-                string? exDesc = example.GetProperty("description")?.GetString();
-                
-                examplesList.Add(new OpenCliExample(cmd, exDesc));
+                if (example.ValueKind == JsonValueKind.String)
+                {
+                    string? exStr = example.GetString();
+                    if (exStr != null) examplesList.Add(exStr);
+                }
+                else if (example.ValueKind == JsonValueKind.Object)
+                {
+                    // Compatibility with object format (e.g. fabric-cli)
+                    string? cmd = example.GetPropertyOrNull("command")?.GetString() ?? example.GetPropertyOrNull("commandLine")?.GetString();
+                    string? exDesc = example.GetPropertyOrNull("description")?.GetString();
+                    if (cmd != null)
+                    {
+                        if (exDesc != null)
+                            examplesList.Add($"{cmd}\n{exDesc}");
+                        else
+                            examplesList.Add(cmd);
+                    }
+                }
             }
             
             if (examplesList.Count > 0)
@@ -444,17 +565,35 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
         
         // Parse nested commands
         IReadOnlyDictionary<string, OpenCliCommand>? nestedCommands = null;
-        JsonValue? nestedCommandsObj = cmdValue.GetProperty("commands");
-        if (nestedCommandsObj != null)
+        JsonElement? nestedCommandsObj = cmdValue.GetPropertyOrNull("commands") ?? cmdValue.GetPropertyOrNull("subcommands");
+        if (nestedCommandsObj.HasValue)
         {
             Dictionary<string, OpenCliCommand> nestedDict = new Dictionary<string, OpenCliCommand>();
             
-            foreach (KeyValuePair<string, JsonValue> nestedCmd in nestedCommandsObj.EnumerateObject())
+            if (nestedCommandsObj.Value.ValueKind == JsonValueKind.Object)
             {
-                OpenCliCommand? nestedCommand = ParseCommand(nestedCmd.Value);
-                if (nestedCommand != null)
+                foreach (JsonProperty nestedCmd in nestedCommandsObj.Value.EnumerateObject())
                 {
-                    nestedDict[nestedCmd.Key] = nestedCommand;
+                    OpenCliCommand? nestedCommand = ParseCommand(nestedCmd.Value, nestedCmd.Name);
+                    if (nestedCommand != null)
+                    {
+                        nestedDict[nestedCmd.Name] = nestedCommand;
+                    }
+                }
+            }
+            else if (nestedCommandsObj.Value.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement nestedCmd in nestedCommandsObj.Value.EnumerateArray())
+                {
+                    string? nestedName = nestedCmd.GetPropertyOrNull("name").GetString();
+                    if (!string.IsNullOrEmpty(nestedName))
+                    {
+                        OpenCliCommand? nestedCommand = ParseCommand(nestedCmd, nestedName);
+                        if (nestedCommand != null)
+                        {
+                            nestedDict[nestedName!] = nestedCommand;
+                        }
+                    }
                 }
             }
             
@@ -464,25 +603,30 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
             }
         }
         
-        return new OpenCliCommand(description, arguments, options, nestedCommands, exitCodes, examples);
+        return new OpenCliCommand(name, aliases, description, arguments, options, nestedCommands, exitCodes, hidden, examples, interactive, null);
     }
     
-    private static IReadOnlyList<OpenCliOption> ParseOptions(JsonValue optionsArray)
+    private static IReadOnlyList<OpenCliOption> ParseOptions(JsonElement optionsArray)
     {
         List<OpenCliOption> options = [];
         
-        foreach (JsonValue? opt in optionsArray.EnumerateArray())
+        foreach (JsonElement opt in optionsArray.EnumerateArray())
         {
-            string? name = opt.GetProperty("name")?.GetString();
-            string? description = opt.GetProperty("description")?.GetString();
+            string name = opt.GetPropertyOrNull("name").GetString() ?? "";
+            string? description = opt.GetPropertyOrNull("description").GetString();
+            bool required = opt.GetPropertyOrNull("required").GetBoolean() ?? false;
+            bool recursive = opt.GetPropertyOrNull("recursive").GetBoolean() ?? false;
+            bool hidden = opt.GetPropertyOrNull("hidden").GetBoolean() ?? false;
+            string? group = opt.GetPropertyOrNull("group").GetString();
             
             // Parse aliases
             IReadOnlyList<string>? aliases = null;
-            JsonValue? aliasesArray = opt.GetProperty("aliases");
-            if (aliasesArray is { Type: JsonValueType.Array })
+            JsonElement? aliasesArray = opt.GetPropertyOrNull("aliases");
+            List<string> aliasesList = [];
+            
+            if (aliasesArray.HasValue && aliasesArray.Value.ValueKind == JsonValueKind.Array)
             {
-                List<string> aliasesList = [];
-                foreach (JsonValue? alias in aliasesArray.EnumerateArray())
+                foreach (JsonElement alias in aliasesArray.Value.EnumerateArray())
                 {
                     string? aliasStr = alias.GetString();
                     if (aliasStr != null)
@@ -490,28 +634,37 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                         aliasesList.Add(aliasStr);
                     }
                 }
-                
-                if (aliasesList.Count > 0)
-                {
-                    aliases = aliasesList.ToImmutableList();
-                }
+            }
+            
+            // Handle shortName as alias
+            string? shortName = opt.GetPropertyOrNull("shortName").GetString();
+            if (!string.IsNullOrEmpty(shortName))
+            {
+                aliasesList.Add(shortName!);
+            }
+            
+            if (aliasesList.Count > 0)
+            {
+                aliases = aliasesList.ToImmutableList();
             }
             
             // Parse option arguments
             IReadOnlyList<OpenCliArgument>? arguments = null;
-            JsonValue? argumentsArray = opt.GetProperty("arguments");
+            JsonElement? argumentsArray = opt.GetPropertyOrNull("arguments");
 
-            if (argumentsArray is { Type: JsonValueType.Array })
+            if (argumentsArray.HasValue && argumentsArray.Value.ValueKind == JsonValueKind.Array)
             {
                 List<OpenCliArgument> argsList = [];
                 
-                foreach (JsonValue? arg in argumentsArray.EnumerateArray())
+                foreach (JsonElement arg in argumentsArray.Value.EnumerateArray())
                 {
-                    string? argName = arg.GetProperty("name")?.GetString();
-                    string? argDesc = arg.GetProperty("description")?.GetString();
-                    bool argRequired = arg.GetProperty("required")?.GetBoolean() ?? false;
-                    
-                    argsList.Add(new OpenCliArgument(argName, argDesc, argRequired, 0));
+                    string argName = arg.GetPropertyOrNull("name").GetString() ?? "";
+                    string? argDesc = arg.GetPropertyOrNull("description").GetString();
+                    bool argRequired = (arg.GetPropertyOrNull("required").GetBoolean() ?? false) || (arg.GetPropertyOrNull("isRequired").GetBoolean() ?? false);
+                    bool argHidden = arg.GetPropertyOrNull("hidden").GetBoolean() ?? false;
+                    string? argGroup = arg.GetPropertyOrNull("group").GetString();
+
+                    argsList.Add(new OpenCliArgument(argName, argRequired, null, null, argGroup, argDesc, argHidden, null));
                 }
                 
                 if (argsList.Count > 0)
@@ -519,8 +672,13 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                     arguments = argsList.ToImmutableList();
                 }
             }
+            else if (opt.GetPropertyOrNull("hasValue").GetBoolean() == true)
+            {
+                // Synthetic argument for options that have a value but no explicit arguments definition
+                arguments = ImmutableList.Create(new OpenCliArgument("value", true, null, null, null, "Option value", false, null));
+            }
             
-            options.Add(new OpenCliOption(name, aliases, description, arguments));
+            options.Add(new OpenCliOption(name, required, aliases, arguments, group, description, recursive, hidden, null));
         }
         
         return options.Count > 0 ? options.ToImmutableList() : ImmutableList<OpenCliOption>.Empty;
@@ -645,7 +803,7 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
     
     private static string GetMethodName(string commandName)
     {
-        return char.ToUpper(commandName[0]) + commandName.Substring(1);
+        return ToPascalCase(commandName);
     }
     
     private static bool IsValidCSharpIdentifier(string name)
@@ -727,11 +885,10 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
             parameters.Add("ICliExecutor cliExecutor");
         }
         
-        // Add arguments ordered by ordinal
+        // Add arguments ordered by list order
         if (command?.Arguments != null)
         {
-            IOrderedEnumerable<OpenCliArgument> orderedArgs = command.Arguments.OrderBy(a => a.Ordinal);
-            foreach (OpenCliArgument? arg in orderedArgs)
+            foreach (OpenCliArgument? arg in command.Arguments)
             {
                 string paramType = arg.Required ? "string" : "string?";
                 string originalParamName = ToCamelCase(arg.Name ?? "arg");
@@ -821,14 +978,32 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
             
         // Handle snake_case and kebab-case
         string[] parts = text.Split(['_', '-'], StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length > 1)
+        
+        if (parts.Length == 0)
+            return text;
+            
+        if (parts.Length == 1)
         {
-            return parts[0].ToLower() + string.Join("", parts.Skip(1).Select(p => 
-                char.ToUpper(p[0]) + p.Substring(1).ToLower()));
+            return parts[0].ToLower();
         }
         
-        // Simple case - just lowercase first letter
-        return char.ToLower(text[0]) + text.Substring(1);
+        return parts[0].ToLower() + string.Join("", parts.Skip(1).Select(p => 
+            char.ToUpper(p[0]) + p.Substring(1)));
+    }
+    
+    private static string ToPascalCase(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return text;
+            
+        // Handle snake_case and kebab-case
+        string[] parts = text.Split(['_', '-'], StringSplitOptions.RemoveEmptyEntries);
+        
+        if (parts.Length == 0)
+            return text;
+            
+        return string.Join("", parts.Select(p => 
+            char.ToUpper(p[0]) + p.Substring(1)));
     }
     
     private static string EscapeParameterName(string paramName, HashSet<string> usedNames)
@@ -937,8 +1112,7 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
         // Handle arguments in order
         if (command?.Arguments != null)
         {
-            IOrderedEnumerable<OpenCliArgument> orderedArgs = command.Arguments.OrderBy(a => a.Ordinal);
-            foreach (OpenCliArgument? arg in orderedArgs)
+            foreach (OpenCliArgument? arg in command.Arguments)
             {
                 string? paramName = argumentParameterMap.TryGetValue(arg.Name ?? "arg", out string? escaped) ? escaped : ToCamelCase(arg.Name ?? "arg");
                 
@@ -1146,19 +1320,19 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                 if (option.Arguments?.Any() == true)
                 {
                     // Option with value
-                    sb.AppendLine($"{indent}if (!string.IsNullOrEmpty({paramName}))");
-                    sb.AppendLine($"{indent}{{");
-                    sb.AppendLine($"{indent}    args.Add(\"--{option.Name}\");");
-                    sb.AppendLine($"{indent}    args.Add({paramName});");
-                    sb.AppendLine($"{indent}}}");
+                    sb.AppendLine($"            if (!string.IsNullOrEmpty({paramName}))");
+                    sb.AppendLine("            {");
+                    sb.AppendLine($"                args.Add(\"--{option.Name}\");");
+                    sb.AppendLine($"                args.Add({paramName});");
+                    sb.AppendLine("            }");
                 }
                 else
                 {
                     // Boolean flag
-                    sb.AppendLine($"{indent}if ({paramName})");
-                    sb.AppendLine($"{indent}{{");
-                    sb.AppendLine($"{indent}    args.Add(\"--{option.Name}\");");
-                    sb.AppendLine($"{indent}}}");
+                    sb.AppendLine($"            if ({paramName})");
+                    sb.AppendLine("            {");
+                    sb.AppendLine($"                args.Add(\"--{option.Name}\");");
+                    sb.AppendLine("            }");
                 }
                 sb.AppendLine();
             }
@@ -1174,19 +1348,19 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                 if (option.Arguments?.Any() == true)
                 {
                     // Option with value
-                    sb.AppendLine($"{indent}if (!string.IsNullOrEmpty({paramName}))");
-                    sb.AppendLine($"{indent}{{");
-                    sb.AppendLine($"{indent}    args.Add(\"--{option.Name}\");");
-                    sb.AppendLine($"{indent}    args.Add({paramName});");
-                    sb.AppendLine($"{indent}}}");
+                    sb.AppendLine($"            if (!string.IsNullOrEmpty({paramName}))");
+                    sb.AppendLine("            {");
+                    sb.AppendLine($"                args.Add(\"--{option.Name}\");");
+                    sb.AppendLine($"                args.Add({paramName});");
+                    sb.AppendLine("            }");
                 }
                 else
                 {
                     // Boolean flag
-                    sb.AppendLine($"{indent}if ({paramName})");
-                    sb.AppendLine($"{indent}{{");
-                    sb.AppendLine($"{indent}    args.Add(\"--{option.Name}\");");
-                    sb.AppendLine($"{indent}}}");
+                    sb.AppendLine($"            if ({paramName})");
+                    sb.AppendLine("            {");
+                    sb.AppendLine($"                args.Add(\"--{option.Name}\");");
+                    sb.AppendLine("            }");
                 }
                 sb.AppendLine();
             }
@@ -1195,21 +1369,20 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
         // Handle arguments in order
         if (command?.Arguments != null)
         {
-            IOrderedEnumerable<OpenCliArgument> orderedArgs = command.Arguments.OrderBy(a => a.Ordinal);
-            foreach (OpenCliArgument? arg in orderedArgs)
+            foreach (OpenCliArgument? arg in command.Arguments)
             {
                 string? paramName = argumentParameterMap.TryGetValue(arg.Name ?? "arg", out string? escaped) ? escaped : ToCamelCase(arg.Name ?? "arg");
                 
                 if (arg.Required)
                 {
-                    sb.AppendLine($"{indent}args.Add({paramName});");
+                    sb.AppendLine($"            args.Add({paramName});");
                 }
                 else
                 {
-                    sb.AppendLine($"{indent}if (!string.IsNullOrEmpty({paramName}))");
-                    sb.AppendLine($"{indent}{{");
-                    sb.AppendLine($"{indent}    args.Add({paramName});");
-                    sb.AppendLine($"{indent}}}");
+                    sb.AppendLine($"            if (!string.IsNullOrEmpty({paramName}))");
+                    sb.AppendLine($"            {{");
+                    sb.AppendLine($"                args.Add({paramName});");
+                    sb.AppendLine($"            }}");
                 }
             }
             
@@ -1248,12 +1421,13 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
         if (command.Examples?.Any() == true)
         {
             sb.AppendLine($"{indent}/// Examples:");
-            foreach (var example in command.Examples)
+            foreach (string example in command.Examples)
             {
-                sb.AppendLine($"{indent}/// - {example.Command}");
-                if (!string.IsNullOrEmpty(example.Description))
+                var parts = example.Split('\n');
+                sb.AppendLine($"{indent}/// - {parts[0]}");
+                if (parts.Length > 1)
                 {
-                    sb.AppendLine($"{indent}///   {example.Description}");
+                    sb.AppendLine($"{indent}///   {parts[1]}");
                 }
             }
         }

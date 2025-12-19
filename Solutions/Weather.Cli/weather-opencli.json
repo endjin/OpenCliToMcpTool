@@ -5,15 +5,15 @@
     "version": "1.0.0",
     "description": "Weather information and forecast CLI tool"
   },
-  "commands": {
-    "current": {
+  "commands": [
+    {
+      "name": "current",
       "description": "Get current weather for a city",
       "arguments": [
         {
           "name": "city",
           "description": "City name",
-          "required": true,
-          "ordinal": 0
+          "required": true
         }
       ],
       "options": [
@@ -48,28 +48,19 @@
         }
       ],
       "examples": [
-        {
-          "command": "weather current London",
-          "description": "Get current weather in London"
-        },
-        {
-          "command": "weather current Tokyo --unit fahrenheit",
-          "description": "Get temperature in Fahrenheit"
-        },
-        {
-          "command": "weather current Paris --detailed",
-          "description": "Get detailed weather information"
-        }
+        "weather current London - Get current weather in London",
+        "weather current Tokyo --unit fahrenheit - Get temperature in Fahrenheit",
+        "weather current Paris --detailed - Get detailed weather information"
       ]
     },
-    "forecast": {
+    {
+      "name": "forecast",
       "description": "Get weather forecast",
       "arguments": [
         {
           "name": "city",
           "description": "City name",
-          "required": true,
-          "ordinal": 0
+          "required": true
         }
       ],
       "options": [
@@ -110,18 +101,9 @@
         }
       ],
       "examples": [
-        {
-          "command": "weather forecast Paris",
-          "description": "Get 5-day forecast for Paris"
-        },
-        {
-          "command": "weather forecast Berlin --days 7",
-          "description": "Get 7-day forecast"
-        },
-        {
-          "command": "weather forecast Madrid --format chart",
-          "description": "Display forecast as a chart"
-        }
+        "weather forecast Paris - Get 5-day forecast for Paris",
+        "weather forecast Berlin --days 7 - Get 7-day forecast",
+        "weather forecast Madrid --format chart - Display forecast as a chart"
       ],
       "exitCodes": [
         {
@@ -134,15 +116,15 @@
         }
       ]
     },
-    "compare": {
+    {
+      "name": "compare",
       "description": "Compare weather between cities",
       "arguments": [
         {
           "name": "cities",
           "description": "Cities to compare (2-5)",
           "required": true,
-          "ordinal": 0,
-          "arity": "one-or-more"
+          "arity": { "minimum": 1 }
         }
       ],
       "options": [
@@ -160,14 +142,8 @@
         }
       ],
       "examples": [
-        {
-          "command": "weather compare London Paris",
-          "description": "Compare weather between two cities"
-        },
-        {
-          "command": "weather compare Tokyo \"New York\" Berlin",
-          "description": "Compare weather between three cities"
-        }
+        "weather compare London Paris - Compare weather between two cities",
+        "weather compare Tokyo \"New York\" Berlin - Compare weather between three cities"
       ],
       "exitCodes": [
         {
@@ -180,17 +156,18 @@
         }
       ]
     },
-    "location": {
+    {
+      "name": "location",
       "description": "Manage saved locations",
-      "commands": {
-        "add": {
+      "commands": [
+        {
+          "name": "add",
           "description": "Add a favorite location",
           "arguments": [
             {
               "name": "city",
               "description": "City name",
-              "required": true,
-              "ordinal": 0
+              "required": true
             }
           ],
           "options": [
@@ -207,33 +184,25 @@
             }
           ],
           "examples": [
-            {
-              "command": "weather location add London",
-              "description": "Add London to saved locations"
-            },
-            {
-              "command": "weather location add London --nickname home",
-              "description": "Add London with a nickname"
-            }
+            "weather location add London - Add London to saved locations",
+            "weather location add London --nickname home - Add London with a nickname"
           ]
         },
-        "list": {
+        {
+          "name": "list",
           "description": "List saved locations",
           "examples": [
-            {
-              "command": "weather location list",
-              "description": "Show all saved locations"
-            }
+            "weather location list - Show all saved locations"
           ]
         },
-        "remove": {
+        {
+          "name": "remove",
           "description": "Remove a saved location",
           "arguments": [
             {
               "name": "city",
               "description": "City name to remove",
-              "required": true,
-              "ordinal": 0
+              "required": true
             }
           ],
           "options": [
@@ -244,10 +213,7 @@
             }
           ],
           "examples": [
-            {
-              "command": "weather location remove London",
-              "description": "Remove London from saved locations"
-            }
+            "weather location remove London - Remove London from saved locations"
           ],
           "exitCodes": [
             {
@@ -260,7 +226,7 @@
             }
           ]
         }
-      }
+      ]
     }
-  }
+  ]
 }

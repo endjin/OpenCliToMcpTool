@@ -22,8 +22,9 @@
       ]
     }
   ],
-  "commands": {
-    "list": {
+  "commands": [
+    {
+      "name": "list",
       "description": "List all tasks",
       "aliases": ["ls"],
       "options": [
@@ -89,31 +90,23 @@
         }
       ],
       "examples": [
-        {
-          "command": "taskmanager list",
-          "description": "List all pending tasks"
-        },
-        {
-          "command": "taskmanager list --status pending",
-          "description": "List only pending tasks"
-        },
-        {
-          "command": "taskmanager list --priority high --status in-progress",
-          "description": "List high priority tasks that are in progress"
-        }
+        "taskmanager list - List all pending tasks",
+        "taskmanager list --status pending - List only pending tasks",
+        "taskmanager list --priority high --status in-progress - List high priority tasks that are in progress"
       ]
     },
-    "task": {
+    {
+      "name": "task",
       "description": "Manage individual tasks",
-      "commands": {
-        "add": {
+      "commands": [
+        {
+          "name": "add",
           "description": "Add a new task",
           "arguments": [
             {
               "name": "title",
               "description": "Task title",
-              "required": true,
-              "ordinal": 0
+              "required": true
             }
           ],
           "options": [
@@ -184,24 +177,18 @@
             }
           ],
           "examples": [
-            {
-              "command": "taskmanager task add \"Complete project documentation\"",
-              "description": "Add a simple task"
-            },
-            {
-              "command": "taskmanager task add \"Review pull request\" --priority high --due tomorrow",
-              "description": "Add a high priority task due tomorrow"
-            }
+            "taskmanager task add \"Complete project documentation\" - Add a simple task",
+            "taskmanager task add \"Review pull request\" --priority high --due tomorrow - Add a high priority task due tomorrow"
           ]
         },
-        "update": {
+        {
+          "name": "update",
           "description": "Update an existing task",
           "arguments": [
             {
               "name": "id",
               "description": "Task ID",
-              "required": true,
-              "ordinal": 0
+              "required": true
             }
           ],
           "options": [
@@ -267,25 +254,19 @@
             }
           ],
           "examples": [
-            {
-              "command": "taskmanager task update 123 --status completed",
-              "description": "Mark task as completed"
-            },
-            {
-              "command": "taskmanager task update 123 --priority low --assignee john",
-              "description": "Update priority and assignee"
-            }
+            "taskmanager task update 123 --status completed - Mark task as completed",
+            "taskmanager task update 123 --priority low --assignee john - Update priority and assignee"
           ]
         },
-        "delete": {
+        {
+          "name": "delete",
           "description": "Delete a task",
           "aliases": ["rm"],
           "arguments": [
             {
               "name": "id",
               "description": "Task ID",
-              "required": true,
-              "ordinal": 0
+              "required": true
             }
           ],
           "options": [
@@ -296,24 +277,18 @@
             }
           ],
           "examples": [
-            {
-              "command": "taskmanager task delete 123",
-              "description": "Delete task with confirmation"
-            },
-            {
-              "command": "taskmanager task delete 123 --force",
-              "description": "Delete task without confirmation"
-            }
+            "taskmanager task delete 123 - Delete task with confirmation",
+            "taskmanager task delete 123 --force - Delete task without confirmation"
           ]
         },
-        "show": {
+        {
+          "name": "show",
           "description": "Show details of a specific task",
           "arguments": [
             {
               "name": "id",
               "description": "Task ID",
-              "required": true,
-              "ordinal": 0
+              "required": true
             }
           ],
           "options": [
@@ -331,22 +306,18 @@
             }
           ],
           "examples": [
-            {
-              "command": "taskmanager task show 123",
-              "description": "Show task details in table format"
-            },
-            {
-              "command": "taskmanager task show 123 --format json",
-              "description": "Show task details in JSON format"
-            }
+            "taskmanager task show 123 - Show task details in table format",
+            "taskmanager task show 123 --format json - Show task details in JSON format"
           ]
         }
-      }
+      ]
     },
-    "project": {
+    {
+      "name": "project",
       "description": "Manage projects",
-      "commands": {
-        "list": {
+      "commands": [
+        {
+          "name": "list",
           "description": "List all projects",
           "options": [
             {
@@ -355,24 +326,18 @@
             }
           ],
           "examples": [
-            {
-              "command": "taskmanager project list",
-              "description": "List all projects"
-            },
-            {
-              "command": "taskmanager project list --active",
-              "description": "List only active projects"
-            }
+            "taskmanager project list - List all projects",
+            "taskmanager project list --active - List only active projects"
           ]
         },
-        "create": {
+        {
+          "name": "create",
           "description": "Create a new project",
           "arguments": [
             {
               "name": "name",
               "description": "Project name",
-              "required": true,
-              "ordinal": 0
+              "required": true
             }
           ],
           "options": [
@@ -400,36 +365,28 @@
             }
           ],
           "examples": [
-            {
-              "command": "taskmanager project create \"Website Redesign\"",
-              "description": "Create a simple project"
-            },
-            {
-              "command": "taskmanager project create \"API Development\" --team backend",
-              "description": "Create project with team assignment"
-            }
+            "taskmanager project create \"Website Redesign\" - Create a simple project",
+            "taskmanager project create \"API Development\" --team backend - Create project with team assignment"
           ]
         },
-        "archive": {
+        {
+          "name": "archive",
           "description": "Archive a project",
           "arguments": [
             {
               "name": "name",
               "description": "Project name",
-              "required": true,
-              "ordinal": 0
+              "required": true
             }
           ],
           "examples": [
-            {
-              "command": "taskmanager project archive \"Old Project\"",
-              "description": "Archive a project"
-            }
+            "taskmanager project archive \"Old Project\" - Archive a project"
           ]
         }
-      }
+      ]
     },
-    "stats": {
+    {
+      "name": "stats",
       "description": "Show task statistics",
       "options": [
         {
@@ -456,28 +413,19 @@
         }
       ],
       "examples": [
-        {
-          "command": "taskmanager stats",
-          "description": "Show all-time statistics"
-        },
-        {
-          "command": "taskmanager stats --period week",
-          "description": "Show statistics for the past week"
-        },
-        {
-          "command": "taskmanager stats --period month --project \"Website Redesign\"",
-          "description": "Show monthly statistics for a specific project"
-        }
+        "taskmanager stats - Show all-time statistics",
+        "taskmanager stats --period week - Show statistics for the past week",
+        "taskmanager stats --period month --project \"Website Redesign\" - Show monthly statistics for a specific project"
       ]
     },
-    "export": {
+    {
+      "name": "export",
       "description": "Export tasks to various formats",
       "arguments": [
         {
           "name": "output",
           "description": "Output file path",
-          "required": true,
-          "ordinal": 0
+          "required": true
         }
       ],
       "options": [
@@ -509,18 +457,9 @@
         }
       ],
       "examples": [
-        {
-          "command": "taskmanager export tasks.json",
-          "description": "Export to JSON format"
-        },
-        {
-          "command": "taskmanager export tasks.csv --format csv",
-          "description": "Export to CSV format"
-        },
-        {
-          "command": "taskmanager export report.md --format markdown --include-completed",
-          "description": "Export to Markdown including completed tasks"
-        }
+        "taskmanager export tasks.json - Export to JSON format",
+        "taskmanager export tasks.csv --format csv - Export to CSV format",
+        "taskmanager export report.md --format markdown --include-completed - Export to Markdown including completed tasks"
       ],
       "exitCodes": [
         {
@@ -533,5 +472,5 @@
         }
       ]
     }
-  }
+  ]
 }

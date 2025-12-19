@@ -9,7 +9,7 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor InvalidJsonFormat = new(
         id: "OCMCP001",
         title: "Invalid OpenCLI JSON format",
-        messageFormat: "The OpenCLI JSON file '{0}' contains invalid JSON",
+        messageFormat: "The OpenCLI JSON file '{0}' contains invalid JSON. Error: {1}.",
         category: Category,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
