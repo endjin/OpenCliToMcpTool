@@ -810,20 +810,26 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
     {
         if (string.IsNullOrEmpty(name))
             return false;
-            
-        // Check if first character is valid (letter or underscore)
-        if (!char.IsLetter(name[0]) && name[0] != '_')
+
+        // Convert the name to PascalCase (handles kebab-case and snake_case)
+        string convertedName = ToPascalCase(name);
+
+        if (string.IsNullOrEmpty(convertedName))
             return false;
-            
+
+        // Check if first character is valid (letter or underscore)
+        if (!char.IsLetter(convertedName[0]) && convertedName[0] != '_')
+            return false;
+
         // Check remaining characters (letters, digits, or underscore)
-        for (int i = 1; i < name.Length; i++)
+        for (int i = 1; i < convertedName.Length; i++)
         {
-            if (!char.IsLetterOrDigit(name[i]) && name[i] != '_')
+            if (!char.IsLetterOrDigit(convertedName[i]) && convertedName[i] != '_')
                 return false;
         }
-        
+
         // Check if it's a C# keyword
-        return !CSharpKeywords.Contains(name);
+        return !CSharpKeywords.Contains(convertedName);
     }
     
     private static bool ValidateCommandNames(IReadOnlyDictionary<string, OpenCliCommand>? commands, HashSet<string> usedNames, string filePath, Action<Diagnostic> reportDiagnostic)
@@ -848,8 +854,9 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                 isValid = false;
             }
             
-            // Check for duplicates at this level
-            if (!usedNames.Add(commandName))
+            // Check for duplicates at this level (using converted name to catch get-data vs get_data collisions)
+            string convertedName = ToPascalCase(commandName);
+            if (!usedNames.Add(convertedName))
             {
                 reportDiagnostic(Diagnostic.Create(
                     DiagnosticDescriptors.DuplicateCommandName,
