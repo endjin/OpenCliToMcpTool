@@ -25,7 +25,6 @@
 						"workspace"
 					]
 			},
-			,
 			"terminal.integrated.defaultProfile.linux": "pwsh"
 			},
 			"extensions": [
