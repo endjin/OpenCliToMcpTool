@@ -546,7 +546,7 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                     if (cmd != null)
                     {
                         if (exDesc != null)
-                            examplesList.Add($"{cmd} - {exDesc}");
+                            examplesList.Add($"{cmd}\n{exDesc}");
                         else
                             examplesList.Add(cmd);
                     }
@@ -1316,19 +1316,19 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                 if (option.Arguments?.Any() == true)
                 {
                     // Option with value
-                    sb.AppendLine($"{indent}if (!string.IsNullOrEmpty({paramName}))");
-                    sb.AppendLine($"{indent}{{");
-                    sb.AppendLine($"{indent}    args.Add(\"--{option.Name}\");");
-                    sb.AppendLine($"{indent}    args.Add({paramName});");
-                    sb.AppendLine($"{indent}}}");
+                    sb.AppendLine($"            if (!string.IsNullOrEmpty({paramName}))");
+                    sb.AppendLine("            {");
+                    sb.AppendLine($"                args.Add(\"--{option.Name}\");");
+                    sb.AppendLine($"                args.Add({paramName});");
+                    sb.AppendLine("            }");
                 }
                 else
                 {
                     // Boolean flag
-                    sb.AppendLine($"{indent}if ({paramName})");
-                    sb.AppendLine($"{indent}{{");
-                    sb.AppendLine($"{indent}    args.Add(\"--{option.Name}\");");
-                    sb.AppendLine($"{indent}}}");
+                    sb.AppendLine($"            if ({paramName})");
+                    sb.AppendLine("            {");
+                    sb.AppendLine($"                args.Add(\"--{option.Name}\");");
+                    sb.AppendLine("            }");
                 }
                 sb.AppendLine();
             }
@@ -1344,19 +1344,19 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                 if (option.Arguments?.Any() == true)
                 {
                     // Option with value
-                    sb.AppendLine($"{indent}if (!string.IsNullOrEmpty({paramName}))");
-                    sb.AppendLine($"{indent}{{");
-                    sb.AppendLine($"{indent}    args.Add(\"--{option.Name}\");");
-                    sb.AppendLine($"{indent}    args.Add({paramName});");
-                    sb.AppendLine($"{indent}}}");
+                    sb.AppendLine($"            if (!string.IsNullOrEmpty({paramName}))");
+                    sb.AppendLine("            {");
+                    sb.AppendLine($"                args.Add(\"--{option.Name}\");");
+                    sb.AppendLine($"                args.Add({paramName});");
+                    sb.AppendLine("            }");
                 }
                 else
                 {
                     // Boolean flag
-                    sb.AppendLine($"{indent}if ({paramName})");
-                    sb.AppendLine($"{indent}{{");
-                    sb.AppendLine($"{indent}    args.Add(\"--{option.Name}\");");
-                    sb.AppendLine($"{indent}}}");
+                    sb.AppendLine($"            if ({paramName})");
+                    sb.AppendLine("            {");
+                    sb.AppendLine($"                args.Add(\"--{option.Name}\");");
+                    sb.AppendLine("            }");
                 }
                 sb.AppendLine();
             }
@@ -1371,14 +1371,14 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
                 
                 if (arg.Required)
                 {
-                    sb.AppendLine($"{indent}args.Add({paramName});");
+                    sb.AppendLine($"            args.Add({paramName});");
                 }
                 else
                 {
-                    sb.AppendLine($"{indent}if (!string.IsNullOrEmpty({paramName}))");
-                    sb.AppendLine($"{indent}{{");
-                    sb.AppendLine($"{indent}    args.Add({paramName});");
-                    sb.AppendLine($"{indent}}}");
+                    sb.AppendLine($"            if (!string.IsNullOrEmpty({paramName}))");
+                    sb.AppendLine($"            {{");
+                    sb.AppendLine($"                args.Add({paramName});");
+                    sb.AppendLine($"            }}");
                 }
             }
             
@@ -1419,7 +1419,12 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
             sb.AppendLine($"{indent}/// Examples:");
             foreach (string example in command.Examples)
             {
-                sb.AppendLine($"{indent}/// - {example}");
+                var parts = example.Split('\n');
+                sb.AppendLine($"{indent}/// - {parts[0]}");
+                if (parts.Length > 1)
+                {
+                    sb.AppendLine($"{indent}///   {parts[1]}");
+                }
             }
         }
         
