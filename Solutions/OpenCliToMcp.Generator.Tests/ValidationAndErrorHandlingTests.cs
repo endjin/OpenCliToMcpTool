@@ -205,7 +205,236 @@ public class ValidationAndErrorHandlingTests
         mcpToolSource.ShouldContain("string @class");
         mcpToolSource.ShouldContain("bool @namespace = false");
     }
-    
+
+    [TestMethod]
+    public void Generator_WithKebabCaseCommandName_GeneratesValidCode()
+    {
+        // Arrange
+        string openCliJson = """
+                             {
+                               "opencli": "0.1",
+                               "info": {
+                                 "title": "Test",
+                                 "version": "1.0.0"
+                               },
+                               "commands": {
+                                 "get-data": {
+                                   "description": "Gets data from server"
+                                 }
+                               }
+                             }
+                             """;
+
+        CSharpCompilation compilation = CreateCompilation("");
+        OpenCliToMcpGenerator generator = new();
+        InMemoryAdditionalText additionalText = new("test.opencli.json", openCliJson);
+
+        // Act
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator)
+            .AddAdditionalTexts([additionalText]);
+        driver = (CSharpGeneratorDriver)driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out ImmutableArray<Diagnostic> diagnostics);
+
+        // Assert
+        diagnostics.ShouldBeEmpty();
+        ImmutableArray<SyntaxTree> generatedTrees = driver.GetRunResult().GeneratedTrees;
+
+        string mcpToolSource = generatedTrees.First(t => t.FilePath.Contains("TestToolMcp")).GetText().ToString();
+
+        // Should convert kebab-case to PascalCase method name
+        mcpToolSource.ShouldContain("GetDataAsync");
+    }
+
+    [TestMethod]
+    public void Generator_WithSnakeCaseCommandName_GeneratesValidCode()
+    {
+        // Arrange
+        string openCliJson = """
+                             {
+                               "opencli": "0.1",
+                               "info": {
+                                 "title": "Test",
+                                 "version": "1.0.0"
+                               },
+                               "commands": {
+                                 "get_data": {
+                                   "description": "Gets data from server"
+                                 }
+                               }
+                             }
+                             """;
+
+        CSharpCompilation compilation = CreateCompilation("");
+        OpenCliToMcpGenerator generator = new();
+        InMemoryAdditionalText additionalText = new("test.opencli.json", openCliJson);
+
+        // Act
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator)
+            .AddAdditionalTexts([additionalText]);
+        driver = (CSharpGeneratorDriver)driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out ImmutableArray<Diagnostic> diagnostics);
+
+        // Assert
+        diagnostics.ShouldBeEmpty();
+        ImmutableArray<SyntaxTree> generatedTrees = driver.GetRunResult().GeneratedTrees;
+
+        string mcpToolSource = generatedTrees.First(t => t.FilePath.Contains("TestToolMcp")).GetText().ToString();
+
+        // Should convert snake_case to PascalCase method name
+        mcpToolSource.ShouldContain("GetDataAsync");
+    }
+
+    [TestMethod]
+    public void Generator_WithMixedDelimiterCommandName_GeneratesValidCode()
+    {
+        // Arrange
+        string openCliJson = """
+                             {
+                               "opencli": "0.1",
+                               "info": {
+                                 "title": "Test",
+                                 "version": "1.0.0"
+                               },
+                               "commands": {
+                                 "get-data_info": {
+                                   "description": "Gets data info from server"
+                                 }
+                               }
+                             }
+                             """;
+
+        CSharpCompilation compilation = CreateCompilation("");
+        OpenCliToMcpGenerator generator = new();
+        InMemoryAdditionalText additionalText = new("test.opencli.json", openCliJson);
+
+        // Act
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator)
+            .AddAdditionalTexts([additionalText]);
+        driver = (CSharpGeneratorDriver)driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out ImmutableArray<Diagnostic> diagnostics);
+
+        // Assert
+        diagnostics.ShouldBeEmpty();
+        ImmutableArray<SyntaxTree> generatedTrees = driver.GetRunResult().GeneratedTrees;
+
+        string mcpToolSource = generatedTrees.First(t => t.FilePath.Contains("TestToolMcp")).GetText().ToString();
+
+        // Should convert mixed delimiters to PascalCase method name
+        mcpToolSource.ShouldContain("GetDataInfoAsync");
+    }
+
+    [TestMethod]
+    public void Generator_WithCollidingCommandNames_ReportsDiagnostic()
+    {
+        // Arrange - get-data and get_data both convert to GetData, causing a collision
+        string openCliJson = """
+                             {
+                               "opencli": "0.1",
+                               "info": {
+                                 "title": "Test",
+                                 "version": "1.0.0"
+                               },
+                               "commands": {
+                                 "get-data": {
+                                   "description": "Gets data (kebab-case)"
+                                 },
+                                 "get_data": {
+                                   "description": "Gets data (snake_case)"
+                                 }
+                               }
+                             }
+                             """;
+
+        CSharpCompilation compilation = CreateCompilation("");
+        OpenCliToMcpGenerator generator = new();
+        InMemoryAdditionalText additionalText = new("test.opencli.json", openCliJson);
+
+        // Act
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator)
+            .AddAdditionalTexts([additionalText]);
+        driver = (CSharpGeneratorDriver)driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out ImmutableArray<Diagnostic> diagnostics);
+
+        // Assert - should report duplicate command name diagnostic
+        diagnostics.Length.ShouldBe(1);
+        diagnostics[0].Id.ShouldBe("OCMCP006");
+        diagnostics[0].GetMessage().ShouldContain("appears multiple times");
+    }
+
+    [TestMethod]
+    public void Generator_WithNumericStartingCommandName_ReportsDiagnostic()
+    {
+        // Arrange - 123-command is invalid even after conversion (123Command starts with digit)
+        string openCliJson = """
+                             {
+                               "opencli": "0.1",
+                               "info": {
+                                 "title": "Test",
+                                 "version": "1.0.0"
+                               },
+                               "commands": {
+                                 "123-command": {
+                                   "description": "Invalid command starting with number"
+                                 }
+                               }
+                             }
+                             """;
+
+        CSharpCompilation compilation = CreateCompilation("");
+        OpenCliToMcpGenerator generator = new();
+        InMemoryAdditionalText additionalText = new("test.opencli.json", openCliJson);
+
+        // Act
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator)
+            .AddAdditionalTexts([additionalText]);
+        driver = (CSharpGeneratorDriver)driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out ImmutableArray<Diagnostic> diagnostics);
+
+        // Assert - should report invalid command name diagnostic
+        diagnostics.Length.ShouldBe(1);
+        diagnostics[0].Id.ShouldBe("OCMCP005");
+        diagnostics[0].GetMessage().ShouldContain("is not a valid C# identifier");
+    }
+
+    [TestMethod]
+    public void Generator_WithKebabCaseParameterName_GeneratesCamelCase()
+    {
+        // Arrange
+        string openCliJson = """
+                             {
+                               "opencli": "0.1",
+                               "info": {
+                                 "title": "Test",
+                                 "version": "1.0.0"
+                               },
+                               "commands": {
+                                 "test": {
+                                   "description": "Test command",
+                                   "options": [
+                                     {
+                                       "name": "output-format",
+                                       "description": "The output format"
+                                     }
+                                   ]
+                                 }
+                               }
+                             }
+                             """;
+
+        CSharpCompilation compilation = CreateCompilation("");
+        OpenCliToMcpGenerator generator = new();
+        InMemoryAdditionalText additionalText = new("test.opencli.json", openCliJson);
+
+        // Act
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator)
+            .AddAdditionalTexts([additionalText]);
+        driver = (CSharpGeneratorDriver)driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out ImmutableArray<Diagnostic> diagnostics);
+
+        // Assert
+        diagnostics.ShouldBeEmpty();
+        ImmutableArray<SyntaxTree> generatedTrees = driver.GetRunResult().GeneratedTrees;
+
+        string mcpToolSource = generatedTrees.First(t => t.FilePath.Contains("TestToolMcp")).GetText().ToString();
+
+        // Should convert kebab-case option to camelCase parameter name
+        mcpToolSource.ShouldContain("outputFormat");
+    }
+
     private static CSharpCompilation CreateCompilation(string source)
     {
         return CSharpCompilation.Create("TestAssembly",

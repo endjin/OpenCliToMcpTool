@@ -1,8 +1,11 @@
 {
-	"name": "Claude Code with C# (.NET), PowerShell and Node",
-	"image": "mcr.microsoft.com/devcontainers/dotnet:1-9.0-bookworm",
+	"name": "C# (.NET)",
+	"image": "mcr.microsoft.com/dotnet/sdk:10.0-noble",
+	"remoteUser": "vscode",
 	"features": {
 		"ghcr.io/devcontainers/features/node:1": {},
+		"ghcr.io/devcontainers/features/python:1": {},
+		"ghcr.io/devcontainers/features/sshd:1": {},
 		"ghcr.io/devcontainers/features/powershell:1": {},
 		"ghcr.io/devcontainers/features/common-utils:2": {
 			"installZsh": "true",
@@ -11,17 +14,33 @@
 			"nonFreePackages": "true"
 	}
 	},
+	"onCreateCommand": "sudo dotnet workload update",
 	"postCreateCommand": "sudo chsh vscode -s \"$(which pwsh)\" && npm install -g @anthropic-ai/claude-code",
+	"postStartCommand": "bash -lc 'if [ $(id -u) = 0 ]; then echo Skipping claude init: running as root; exit 0; fi; if ! command -v claude >/dev/null 2>&1; then echo Skipping claude init: claude not found; exit 0; fi; claude --dangerously-skip-permissions || true; exit 0'",
 	"customizations": {
 		"vscode": {
 			"settings": { 
+			"remote.extensionKind": {
+					"RooVeterinaryInc.roo-cline": [
+						"workspace"
+					]
+			},
 			"terminal.integrated.defaultProfile.linux": "pwsh"
 			},
 			"extensions": [
+				"RooVeterinaryInc.roo-cline",
 				"ms-vscode.powershell",
 				"anthropic.claude-code",
 				"ms-dotnettools.csdevkit"
 			]
 		}
+	},
+	"remoteEnv": {
+		"PERPLEXITY_API_KEY": "${localEnv:PERPLEXITY_API_KEY}",
+		"SEMANTICKERNELPROVIDERS__PROVIDERS__OPENAI__SETTINGS__APIKEY": "${localEnv:OPENAI_API_KEY}",
+		"SEMANTICKERNELPROVIDERS__PROVIDERS__AZURE_OPENAI__SETTINGS__APIKEY": "${localEnv:AZURE_OPENAI_API_KEY}",
+		"SEMANTICKERNELPROVIDERS__PROVIDERS__AZURE_OPENAI__SETTINGS__ENDPOINT": "${localEnv:SEMANTICKERNELPROVIDERS__PROVIDERS__AZURE_OPENAI__SETTINGS__ENDPOINT}",
+		"SEMANTICKERNELPROVIDERS__PROVIDERS__AZURE_OPENAI__SETTINGS__DEPLOYMENTNAME": "${localEnv:SEMANTICKERNELPROVIDERS__PROVIDERS__AZURE_OPENAI__SETTINGS__DEPLOYMENTNAME}",
+		"SEMANTICKERNELPROVIDERS__PROVIDERS__GOOGLE_GEMINI__SETTINGS__APIKEY": "${localEnv:GOOGLE_GEMINI_API_KEY}"
 	}
 }
