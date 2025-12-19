@@ -984,7 +984,7 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
         }
         
         return parts[0].ToLower() + string.Join("", parts.Skip(1).Select(p => 
-            char.ToUpper(p[0]) + p.Substring(1).ToLower()));
+            char.ToUpper(p[0]) + p.Substring(1)));
     }
     
     private static string ToPascalCase(string text)
@@ -999,7 +999,7 @@ public class OpenCliToMcpGenerator : IIncrementalGenerator
             return text;
             
         return string.Join("", parts.Select(p => 
-            char.ToUpper(p[0]) + p.Substring(1).ToLower()));
+            char.ToUpper(p[0]) + p.Substring(1)));
     }
     
     private static string EscapeParameterName(string paramName, HashSet<string> usedNames)
