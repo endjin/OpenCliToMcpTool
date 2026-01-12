@@ -21,7 +21,7 @@
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     
     <!-- Code Coverage -->
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.1.0" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.2" />
   </ItemGroup>
 
   <ItemGroup>
