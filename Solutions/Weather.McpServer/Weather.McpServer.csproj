@@ -10,7 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.5.0-preview.1" />
+        <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.0.0" />
     </ItemGroup>
 
     <ItemGroup>
