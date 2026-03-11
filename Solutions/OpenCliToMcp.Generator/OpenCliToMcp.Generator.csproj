@@ -26,7 +26,7 @@
         <PackageReference Include="System.Text.Json" Version="10.0.1" PrivateAssets="all" GeneratePathProperty="true" />
         <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" PrivateAssets="all" GeneratePathProperty="true" />
         <PackageReference Include="System.Text.Encodings.Web" Version="10.0.1" PrivateAssets="all" GeneratePathProperty="true" />
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.1" PrivateAssets="all" GeneratePathProperty="true" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.4" PrivateAssets="all" GeneratePathProperty="true" />
     </ItemGroup>
 
     <!-- Package the generator assembly in the analyzer directory -->
